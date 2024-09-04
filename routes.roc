@@ -1,26 +1,26 @@
-module [BadResponse, handle_req!]
+module [BadResponse, handle_req]
 
 import Instant
 
 BadResponse : [ ... ]
 
 # jwt_secret is passed in from an env var/secret store/etc.
-handle_req! : Db.Conn, Jwt.Secret, Instant, Request => Result (List U8) BadResponse
-handle_req! = \db, jwt_secret, start_time, req =>
-    auth_optional! = \cb! => authenticate_opt start_time jwt_secret req ? |> cb! |> to_json
-    auth! = \cb! => authenticate start_time jwt_secret req ? |> cb! |> to_json
-    auth_json! = \cb! =>
-        user_id = authenticate start_time jwt_secret req ?
-        body = json_arg (Request.body req) ?
-        cb! user_id body |> to_json
+handle_req : Db.Conn, Jwt.Secret, Instant, Request => Result (List U8) BadResponse
+handle_req = \db, jwt_secret, start_time, req =>
+    auth_optional = \cb => authenticate_opt? start_time jwt_secret req |> cb |> to_json
+    auth = \cb => authenticate? start_time jwt_secret req |> cb |> to_json
+    auth_json = \cb =>
+        user_id = authenticate? start_time jwt_secret req
+        body = json_arg? (Request.body req)
+        cb user_id body |> to_json
 
     when req.method_and_path is
-        GET "/articles/$(slug)" => auth_optional! \opt_user_id =>
-            Article.get! db opt_user_id slug
-        GET "/articles" => auth_optional! \opt_user_id =>
-            Article.list! db opt_user_id (Request.params req)
-        POST "/articles" => auth_json! \user_id, article =>
-            Article.insert! db user_id article
+        GET "/articles/$(slug)" => auth_optional \opt_user_id =>
+            Article.get db opt_user_id slug
+        GET "/articles" => auth_optional \opt_user_id =>
+            Article.list db opt_user_id (Request.params req)
+        POST "/articles" => auth_json \user_id, article =>
+            Article.insert db user_id article
 
 # The caller of handle_req uses this.
 result_to_response : Result _ _ -> Response
