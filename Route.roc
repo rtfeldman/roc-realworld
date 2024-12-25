@@ -1,5 +1,6 @@
-module { req, jwtSecret, log, db } -> [ResponseErr, handle_req]
+module { jwt_secret, log, db } -> [ResponseErr, handle_req]
 
+import req.Request exposing [Request]
 import Instant
 import Article { log, db }
 import Auth { log, db }

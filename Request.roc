@@ -1,3 +1,4 @@
+# This would be in a separate `request` package.
 module [Request, MethodAndPath, header, method_and_path]
 
 Request := {
