@@ -1,5 +1,5 @@
 
-expect \{ get!, set! } =>
+expect |get!, set!|
     userId = UserId.fromU64 42
     article = {
         title: "foo",

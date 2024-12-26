@@ -3,7 +3,7 @@ module [login!, gen_token, authenticate, authenticate_optional]
 import Jwt
 import Request
 import Db
-import Instant exposing [h]
+import time.Duration exposing [h]
 
 gen_token : Jwt.Secret, UserId, Instant -> Result Str [JwtSigningErr Jwt.SigningErr]
 gen_token = |jwt_secret, user_id, now|
@@ -51,3 +51,11 @@ parse_user_id = |req, jwt_secret, now|
         Err TokenExpired
     else
         Ok claims.user_id
+
+
+expect
+    request = Request.new("GET", "/")
+    jwt_secret = Jwt.Secret("secret")
+    now = Instant.
+
+    parse_user_id(request, jwt_secret, now).is_ok()

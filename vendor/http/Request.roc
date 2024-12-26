@@ -1,5 +1,5 @@
 # This would be in a separate `request` package.
-module [Request, MethodAndPath, header, method_and_path]
+module [Request.*, MethodAndPath, header, method_and_path]
 
 Request := {
     method: Str,
@@ -7,8 +7,14 @@ Request := {
     headers: List (Str, Str),
 }
 
-headers : Request -> List (Str, Str)
-headers = |req| req.headers
+## Gets the request's method and path in a form that's convenient for pattern matching.
+MethodAndPath : [
+    GET Str,
+    POST Str
+    PUT Str,
+    DELETE Str,
+    OPTIONS Str,
+]
 
 header : Request, Str -> Result Str [NotFound]
 header = |req, header_name|
@@ -17,14 +23,6 @@ header = |req, header_name|
             return Ok(value)
 
     Err(HeaderNotFound)
-
-MethodAndPath : [
-    GET Str,
-    POST Str
-    PUT Str,
-    DELETE Str,
-    OPTIONS Str,
-]
 
 method_and_path : Request -> Result MethodAndPath [UnrecognizedMethod { method : Str, path : Str }]
 method_and_path = |req|

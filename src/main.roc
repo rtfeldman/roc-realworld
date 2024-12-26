@@ -1,18 +1,25 @@
 app [init!] {
     ws: platform "https://github.com/roc-lang/basic-webserver/releases/download/0.10.0/BgDDIykwcg51W8HA58FE_BjdzgXVk--ucv6pVb_Adik.tar.br",
-    req: "https://github.com/roc-lang/http-request/.tar.br",
-    resp: "https://github.com/roc-lang/http-response/.tar.br",
+    http: "https://github.com/roc-lang/http/.tar.br",
     log: "https://github.com/roc-lang/log/.tar.br",
+    time: "https://github.com/roc-lang/time/.tar.br",
+    jwt: "https://github.com/…/jwt/.tar.br",
+    sql: "https://github.com/stuarth/rocky-the-flying-squirrel/.tar.br",
     pg: "https://github.com/agu-z/roc-pg/.tar.br",
 }
 
 import ws.Arg
 import ws.Env
 import ws.Stderr
-import req.Request
-import resp.Response
+import http.Request
+import http.Response
 import log.Log
+import log.LogLevel exposing [LogLevel]
 import pg.Pg
+
+## This can be overridden by setting the LOG_LEVEL environment variable.
+default_log_level : LogLevel
+default_log_level = LogLevel.Warn
 
 init! : List Arg => Result (Request => Response) [InitFailed Str]
 init! = |_args|
@@ -20,14 +27,12 @@ init! = |_args|
     log_level =
         when Env.var!("LOG_LEVEL") is
             Ok(level_str) ->
-                Log.level_str(level_str)
+                LogLevel.from_str(level_str)
                 ? |UnsupportedLevel| InitFailed("Invalid LOG_LEVEL env var: ${level_str}")
-            Err(VarNotFound) -> Log.Info
-    log = Log.new(log_level, Stderr.line!)
+            Err(VarNotFound) -> default_log_level
+    db = ... # TODO initialize db client
 
-    db = ... # TODO follow the example in https://github.com/agu-z/roc-pg/blob/92374e8c00390839a1ae2aa50abb8230ad9e81c3/examples/store/server.roc
-
-    import Route { jwt_secret, db, log }
+    import Route { jwt_secret, db, log: Log.logger(log_level, write_log!) }
 
     Ok(|req| Route.handle_req!(req).pass_to(make_response))
 
@@ -40,3 +45,8 @@ make_response = |result|
         Err(Forbidden) -> Response.err(403)
         Err(NotFound) -> Response.err(404)
         Err(InternalErr(str)) -> Response.err_with_body(500, str)
+
+write_log! : LogLevel, Str => {}
+write_log! = |level, msg|
+    # If writing to stderr fails when logging, ignore the error
+    Stderr.line!("${level.to_str()}: ${msg}") ?? {}
