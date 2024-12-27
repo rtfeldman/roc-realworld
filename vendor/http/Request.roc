@@ -1,5 +1,5 @@
 # This would be in a separate `request` package.
-module [Request.*, MethodAndPath, header, method_and_path]
+module [Request.*, MethodAndPath, new, header, method_and_path]
 
 Request := {
     method: Str,
@@ -15,6 +15,10 @@ MethodAndPath : [
     DELETE Str,
     OPTIONS Str,
 ]
+
+new : { method : Str, path : Str, headers : List (Str, Str) } -> Request
+new = |{ method, path, headers }|
+    Request.{ method, path, headers }
 
 header : Request, Str -> Result Str [NotFound]
 header = |req, header_name|

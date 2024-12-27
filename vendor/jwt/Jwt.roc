@@ -1,11 +1,17 @@
-module [Jwt, Secret, Claims, ParseErr, parse, signed_str]
+module [Jwt, Claims, ParseErr, parse, signed_str]
+
+import time.Instant exposing [Instant]
+import JwtSecret exposing [JwtSecret]
 
 Claims : {
     user_id : UserId,
-    std_claims: Jwt.StandardClaims,
+    std_claims: {
+        # TODO fill out whatever the standard JWT claims are.
+        expires_at: Instant,
+    },
 }
 
-parse : Str, Secret -> Result Jwt [InvalidJwt]
+parse : Str, JwtSecret -> Result Jwt [InvalidJwt]
 parse = |str, secret|
     crash "TODO"
 

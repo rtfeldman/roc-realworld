@@ -3,7 +3,7 @@ module [Logger.*, new, log!, debug!, info!, warn!, error!]
 
 Logger := {
     min_level: Level,
-    write_raw!: Str => {},
+    write_raw!: Level, Str => {},
 }
 
 logger : Level, (Level, Str => {}) -> Logger
@@ -13,7 +13,7 @@ logger = |min_level, write_raw!|
 log! : Logger, Level, Str => {}
 log! = |log, level, msg|
     if to_int(level) >= to_int(log.min_level) then
-        (log.write_raw!)(msg, level)
+        (log.write_raw!)(level, msg)
 
 debug! : Logger, Str => {}
 debug! = |log, msg| log.log!(Level.Debug, msg)

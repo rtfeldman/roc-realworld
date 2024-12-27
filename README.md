@@ -25,8 +25,10 @@ own READMEs.
 ## Syntax being explored
 
 - `${ … }` for string interpolation - currently planned
+- String interpolation in pattern matches - planned, but not a blocker for 0.1.0
 - Parens-and-commas calling style - currently planned
 - Static dispatch - currently planned
 - Pipe-style lambdas (`|foo, bar|`) - assumed to happen if we also do parens-and-commas
-- `then` instead of `->` for `when` branches - not planned, just wanted to see how it feels
 - number suffixes for units of measure, e.g. `24h` desugaring to `h(24)` - not planned, just trying it out
+- Using the `?` suffix in an `expect` means "unwrap and fail if it was `Err`" - not planned, trying it out
+- Allow using un-imported, package-qualified module names in expressions, e.g. `foo.Bar.baz` - not planned

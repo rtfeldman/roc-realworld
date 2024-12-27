@@ -1,4 +1,4 @@
-module { log, db } -> [User]
+module { log, db } -> [User, get_profile!]
 
 import Db
 import UsersTable { db }

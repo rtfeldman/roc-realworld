@@ -1,19 +1,21 @@
 module [login!, gen_token, authenticate, authenticate_optional]
 
-import Jwt
-import Request
-import Db
+import jwt.Jwt
+import jwt.JwtSecret exposing [JwtSecret]
+import http.Request exposing [Request]
 import time.Duration exposing [h]
+import UserId exposing [UserId]
+import Db
 
-gen_token : Jwt.Secret, UserId, Instant -> Result Str [JwtSigningErr Jwt.SigningErr]
+gen_token : JwtSecret, UserId, Instant -> Result Str [JwtSigningErr Jwt.SigningErr]
 gen_token = |jwt_secret, user_id, now|
-    std_claims = { expiresAt: now + 72h }
-	  Jwt.hs256_with_claims({ user_id, std_claims }).signed_str(secret)
+    std_claims = { expires_at: now + 12h }
+	  Jwt.hs256_with_claims({ sub: user_id.to_str(), std_claims }).signed_str(secret)
 
 ## Given a user's credentials, log them in and return their UserId.
 login! : { email : Str, password : Str }, Db.Conn => Result UserId [Unauthorized, InternalErr Str]
 login! = |{ email, password }, db|
-    result = Db.first_row!(...) # incorporate email, password, salt, etc.
+    result = Db.first_row!(...) # TODO incorporate email, password, salt, etc.
     when result is
         Ok user_id -> Ok(user_id)
         Err NoRows -> Err(Unauthorized) # Invalid credentials? 401 Unauthorized!
@@ -52,10 +54,15 @@ parse_user_id = |req, jwt_secret, now|
     else
         Ok claims.user_id
 
-
+## Make sure when we create a request header using our JWT, we can parse it back out again!
 expect
-    request = Request.new("GET", "/")
-    jwt_secret = Jwt.Secret("secret")
-    now = Instant.
+    now = time.Instant.from_ns_from_ns_sincce_utc_epoch(123456789)
+    user_id = UserId.from_str(123)
+    jwt_secret = JwtSecret.from_str("abcdefg")
+    jwt_str = gen_token(secret, user_id, now)?
 
-    parse_user_id(request, jwt_secret, now).is_ok()
+    # Auth header format: https://realworld-docs.netlify.app/specifications/backend/endpoints/
+    auth_header = ("Authorization", "Token ${jwt_str}")
+    request = Request.new({ method: "GET", path: "/", headers: [auth_header] })
+
+    parse_user_id(request, jwt_secret, now) == user_id

@@ -38,7 +38,7 @@ handle_req! = |req|
             handle_cors(req.headers(), path)
         _ -> Err(NotFound)
 
-# Request Helpers - these parse authentication headers, return appropriate error codes if
+# Internal helpers - these parse authentication headers, return appropriate error codes if
 # required authentication is missing or invalid, and then encode the response as JSON.
 
 auth_optional! :
