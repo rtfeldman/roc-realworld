@@ -11,7 +11,7 @@ User : {
     following : Bool,
 }
 
-get_profile! : Username => Result User [DbErr Db.Err]
+get_profile! : |Username| => Result User [DbErr Db.Err]
 get_profile! = |username|
     user = UsersTable.first_row!(username) ? |DbErr err|
         Log.err!("Database error when trying to get a user's profile. Error was: $(err.inspect())")

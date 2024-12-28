@@ -1,14 +1,13 @@
-module { jwt_secret, log, db, now_ns! } -> [ResponseErr, handle_req!]
+module { jwt_secret, log, db, now! } -> [ResponseErr, handle_req!]
 
 import http.Request exposing [Request]
 import Article { log, db }
 import Auth { log, db }
 import User { log, db }
-import ws.Time
 
 ResponseErr : [Unauthorized, Forbidden, NotFound, BadArg Str, InternalErr Str]
 
-handle_req! : Request => Result (List U8) ResponseErr
+handle_req! : |Request| => Result (List U8) ResponseErr
 handle_req! = |req|
     method_and_path = req.method_and_path() ? |UnrecognizedMethod { method, path }|
         BadArg("Unrecognized HTTP method: ${method} ${path}")
@@ -42,27 +41,33 @@ handle_req! = |req|
 # required authentication is missing or invalid, and then encode the response as JSON.
 
 auth_optional! :
-    Request,
-    ([SignedIn UserId, SignedOut] => Result val [..errors] where val.[Encode])
-    => Result (List U8) [Unauthorized, BadArg, ..errors]
+    |
+        Request,
+        |[SignedIn UserId, SignedOut]| => Result val [..errors]
+            where val.[Encode],
+    | => Result (List U8) [Unauthorized, BadArg, ..errors]
 auth_optional! = |req, handle!|
-    authenticate_optional(req, Time.now!())
+    authenticate_optional(req, now!())
     .and_then!(handle!)
     .map(Json.encode_utf8)
 
 auth! :
-    Request,
-    (UserId => Result val [..errors] where val.[Encode])
-    => Result (List U8) [Unauthorized, BadArg, ..errors]
+    |
+        Request,
+        |UserId| => Result val [..errors]
+            where val.[Encode],
+    | => Result (List U8) [Unauthorized, BadArg, ..errors]
 auth! = |req, handle!|
-    authenticate(Time.now!())
+    authenticate(now!())
     .and_then!(handle!)
     .map(Json.encode_utf8)
 
 guest! :
-    Request,
-    (=> Result val [..errors] where val.[Encode])
-    => Result (List U8) [Unauthorized, BadArg, ..errors]
+    |
+        Request,
+        || => Result val [..errors]
+            where val.[Encode],
+    | => Result (List U8) [Unauthorized, BadArg, ..errors]
 guest! = |req, handle!|
     handle!()
     .map(Json.encode_utf8)

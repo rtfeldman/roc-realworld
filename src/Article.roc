@@ -17,7 +17,7 @@ Article : {
     ..NewArticle,
 }
 
-insertArticle! : UserId, NewArticle => Result Article [InternalErr Str]
+insertArticle! : |UserId, NewArticle| => Result Article [InternalErr Str]
 insertArticle! = |author, new_article|
     article = { author, ..new_article }
 
@@ -31,7 +31,7 @@ insertArticle! = |author, new_article|
 
     Ok(article)
 
-list! : => Result (List Article) [DbErr Db.Err]
+list! : || => Result (List Article) [DbErr Db.Err]
 list! = ||
     list = ArticlesTable.list!() ? |DbErr err|
         Log.err!("Database error when trying to list articles. Error was: ${err.inspect()}")

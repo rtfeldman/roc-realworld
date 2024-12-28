@@ -16,11 +16,11 @@ MethodAndPath : [
     OPTIONS Str,
 ]
 
-new : { method : Str, path : Str, headers : List (Str, Str) } -> Request
+new : |{ method : Str, path : Str, headers : List (Str, Str) }| -> Request
 new = |{ method, path, headers }|
     Request.{ method, path, headers }
 
-header : Request, Str -> Result Str [NotFound]
+header : |Request, Str| -> Result Str [NotFound]
 header = |req, header_name|
     for (name, value) in req.headers.iter() do
         if name == header_name
@@ -28,7 +28,7 @@ header = |req, header_name|
 
     Err(HeaderNotFound)
 
-method_and_path : Request -> Result MethodAndPath [UnrecognizedMethod { method : Str, path : Str }]
+method_and_path : |Request| -> Result MethodAndPath [UnrecognizedMethod { method : Str, path : Str }]
 method_and_path = |req|
     when method is
         "GET" -> Ok(GET req.path)

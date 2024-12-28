@@ -25,10 +25,17 @@ own READMEs.
 ## Syntax being explored
 
 - `${ … }` for string interpolation - currently planned
+- `[Foo, Bar, ..others]` instead of `[Foo, Bar]others` - planned, but not yet implemented
 - String interpolation in pattern matches - planned, but not a blocker for 0.1.0
+- Custom types - currently planned
 - Parens-and-commas calling style - currently planned
 - Static dispatch - currently planned
 - Pipe-style lambdas (`|foo, bar|`) - assumed to happen if we also do parens-and-commas
+- Pipe-style function types (`|Str, Str| -> Str`) - not proposed, just trying it out
+- Allow `|` to work in nested patterns - uncontroversially nice, but hard to implement
+- Subdirectories in imports `import src/Foo` - not proposed, just trying it out
 - number suffixes for units of measure, e.g. `24h` desugaring to `h(24)` - not planned, just trying it out
 - Using the `?` suffix in an `expect` means "unwrap and fail if it was `Err`" - not planned, trying it out
 - Allow using un-imported, package-qualified module names in expressions, e.g. `foo.Bar.baz` - not planned
+- `expect ModuleName` - not proposed, just trying it out
+- `test` modules - not proposed, just trying it out
