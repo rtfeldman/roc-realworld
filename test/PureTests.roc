@@ -5,7 +5,7 @@ import time.Instant
 import time.Duration exposing [ms]
 
 jwt_secret = "abcdefg"
-log = Log.do_nothing()
+log = Logger.do_nothing()
 initial_time = Instant.from_ns_since_utc_epoch(123456789)
 
 get_now = |get!, set!| ||

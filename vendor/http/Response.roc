@@ -1,6 +1,6 @@
 module [Response, ok, err, with_body, with_header]
 
-# ok : |Str| -> Response
+# ok : Str -> Response
 # ok = |body| -> Response.ok(body).with_header("Content-Type", "application/json; charset=utf-8")
 
 # make_response = |result|

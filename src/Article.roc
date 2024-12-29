@@ -1,4 +1,4 @@
-module { log, db } -> [NewArticle, Article, insertArticle]
+module { log, db } -> [NewArticle, Article, insert]
 
 import Db
 import ArticlesTable { db }
@@ -17,8 +17,8 @@ Article : {
     ..NewArticle,
 }
 
-insertArticle! : |UserId, NewArticle| => Result Article [InternalErr Str]
-insertArticle! = |author, new_article|
+insert! : UserId, NewArticle => Result Article [InternalErr Str]
+insert! = |author, new_article|
     article = { author, ..new_article }
 
     ArticlesTable.insert!(article) ? |DbErr err|
@@ -27,14 +27,14 @@ insertArticle! = |author, new_article|
         Error was: ${err.inspect()}
         """.InternalErr()
 
-    Log.info!("User ${user_id.to_str()} successfully posted a new article: ${new_article.title}")
+    log.info!("User ${user_id.to_str()} successfully posted a new article: ${new_article.title}")
 
     Ok(article)
 
-list! : || => Result (List Article) [DbErr Db.Err]
+list! : => Result (List Article) [DbErr Db.Err]
 list! = ||
     list = ArticlesTable.list!() ? |DbErr err|
-        Log.err!("Database error when trying to list articles. Error was: ${err.inspect()}")
+        log.err!("Database error when trying to list articles. Error was: ${err.inspect()}")
         DbErr err
 
     Ok(list)

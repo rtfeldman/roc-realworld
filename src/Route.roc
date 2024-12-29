@@ -1,73 +1,61 @@
-module { jwt_secret, log, db, now! } -> [ResponseErr, handle_req!]
+module { jwt_secret, log, db, now! } -> [handle_req!]
 
 import http.Request exposing [Request]
 import Article { log, db }
 import Auth { log, db }
 import User { log, db }
 
-ResponseErr : [Unauthorized, Forbidden, NotFound, BadArg Str, InternalErr Str]
-
-handle_req! : |Request| => Result (List U8) ResponseErr
+handle_req! : Request => Response
 handle_req! = |req|
-    method_and_path = req.method_and_path() ? |UnrecognizedMethod { method, path }|
-        BadArg("Unrecognized HTTP method: ${method} ${path}")
+    method_and_path = req.method_and_path() ??
+        return Response.err(400).body("Unrecognized HTTP method: ${method} ${path}")
+
+    # Helpers for authenticating (if necessary) and/or parsing the body as JSON.
+    # These are defined here so they can close over `req`.
+    auth! = |handle!| Auth.authenticate(req, now!()).and_then!(handle!).map(to_resp)
+    auth_optional! = |handle!| Auth.auth_optional(req, now!()).and_then!(handle!).map(to_resp)
+    from_json! = |handle!| req.body().decode(Json.utf8).and_then!(handle!).map(to_resp)
+    from_json_auth! = |handle!|
+        auth(req, now!())
+        .and_then!(|user_id| handle!(user_id, req.body().decode(Json.utf8)?))
+        .map(to_resp)
 
     when method_and_path is
-        POST "/api/users/login" then
-            guest_json!(|creds| User.login!(creds))
-        POST "/api/users" then
-            guest_json!(|creds| User.register!(creds))
-        GET "/api/user" then
+        POST "/api/users/login" ->
+            from_json!(|email_and_pw| User.login!(email_and_pw))
+        POST "/api/users" ->
+            from_json!(|email_and_pw| User.register!(email_and_pw))
+        GET "/api/user" ->
             auth!(|user_id| User.get_by_id!(user_id))
-        PUT "/api/user" then
-            auth_json!(|user_id, user| User.update!(user_id, user))
-        GET "/api/profiles/${username}" then
-            guest!(|| User.get_by_username!(username))
-        POST "/api/profiles/${username}/follow" then
+        PUT "/api/user" ->
+            from_json_auth!(|user_id, user| User.update!(user_id, user))
+        GET "/api/profiles/${username}" ->
+            to_resp(User.get_by_username!(username))
+        POST "/api/profiles/${username}/follow" ->
             auth!(|user_id| User.follow_username!(user_id, username))
-        DELETE "/api/profiles/${username}/follow" then
+        DELETE "/api/profiles/${username}/follow" ->
             auth!(|user_id| User.unfollow_username!(user_id, username))
-        GET "/api/articles/${slug}" then
-            auth_optional!(req, |opt_user_id| Article.get!(opt_user_id, slug))
-        GET "/api/articles" then
-            auth_optional!(req, |opt_user_id| Article.list!(opt_user_id, req.params()))
-        POST "/api/articles" then
+        GET "/api/articles/${slug}" ->
+            auth_optional!(|opt_user_id| Article.get!(opt_user_id, slug))
+        GET "/api/articles" ->
+            auth_optional!(|opt_user_id| Article.list!(opt_user_id, req.params()))
+        POST "/api/articles" ->
             auth_json!(|user_id, article| Article.insert!(user_id, article))
-        OPTIONS path then
+        OPTIONS path ->
             handle_cors(req.headers(), path)
         _ -> Err(NotFound)
 
 # Internal helpers - these parse authentication headers, return appropriate error codes if
 # required authentication is missing or invalid, and then encode the response as JSON.
 
-auth_optional! :
-    |
-        Request,
-        |[SignedIn UserId, SignedOut]| => Result val [..errors]
-            where val.[Encode],
-    | => Result (List U8) [Unauthorized, BadArg, ..errors]
-auth_optional! = |req, handle!|
-    authenticate_optional(req, now!())
-    .and_then!(handle!)
-    .map(Json.encode_utf8)
-
-auth! :
-    |
-        Request,
-        |UserId| => Result val [..errors]
-            where val.[Encode],
-    | => Result (List U8) [Unauthorized, BadArg, ..errors]
-auth! = |req, handle!|
-    authenticate(now!())
-    .and_then!(handle!)
-    .map(Json.encode_utf8)
-
-guest! :
-    |
-        Request,
-        || => Result val [..errors]
-            where val.[Encode],
-    | => Result (List U8) [Unauthorized, BadArg, ..errors]
-guest! = |req, handle!|
-    handle!()
-    .map(Json.encode_utf8)
+to_resp : Result (List U8) ResponseErr -> Response
+to_resp = |result|
+    when result is
+        Ok(val) ->
+            Response.ok(Json.encode_utf8(val))
+            .with_header("Content-Type", "application/json; charset=utf-8")
+        Err(BadArg) -> Response.err(400)
+        Err(Unauthorized) -> Response.err(401)
+        Err(Forbidden) -> Response.err(403)
+        Err(NotFound) -> Response.err(404)
+        Err(InternalErr(str)) -> Response.err(500).with_body(str)

@@ -6,7 +6,7 @@ import log.Log
 
 expect import PureTests
 
-log = Log.do_nothing() # We don't want integration tests to log anything.
+log = Logger.do_nothing() # We don't want integration tests to log anything.
 jwt_secret = "abcdefg"
 db = crash "TODO initialize integration test db here"
 now! = ws.Time.now! # We could also use a fake "get current time" function for more reproducible tests.

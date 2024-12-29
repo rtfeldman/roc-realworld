@@ -33,22 +33,12 @@ init! = |_args|
             Err(VarNotFound) -> default_log_level
     db = ... # TODO initialize db client
 
-    log = Log.logger(log_level, write_log!)
+    log = Logger.new(log_level, write_log!)
     now! = ws.Time.now! # Use the platform's "get current time" function to get the current time
 
     import src/Route { jwt_secret, db, log, now! }
 
-    Ok(|req| Route.handle_req!(req).pass_to(make_response))
-
-make_response : |Result (List U8) Route.ResponseErr| -> Response
-make_response = |result|
-    when result is
-        Ok(json) -> Response.ok(json).with_header("Content-Type", "application/json; charset=utf-8")
-        Err(BadArg) -> Response.err(400)
-        Err(Unauthorized) -> Response.err(401)
-        Err(Forbidden) -> Response.err(403)
-        Err(NotFound) -> Response.err(404)
-        Err(InternalErr(str)) -> Response.err(500).with_body(str)
+    Ok(Route.handle_req!)
 
 write_log! : |LogLevel, Str| => {}
 write_log! = |level, msg|
