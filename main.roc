@@ -24,21 +24,41 @@ default_log_level = LogLevel.Warn
 
 init! : |List Arg| => Result (Request => Response) [InitFailed Str]
 init! = |_args|
-    jwt_secret = Env.var!("JWT_SECRET") ? |VarNotFound| InitFailed("JWT_SECRET env var was not set.")
-    log_level =
-        when Env.var!("LOG_LEVEL") is
-            Ok(level_str) ->
-                LogLevel.from_str(level_str)
-                ? |UnsupportedLevel| InitFailed("Invalid LOG_LEVEL env var: ${level_str}")
-            Err(VarNotFound) -> default_log_level
-    db = ... # TODO initialize db client
+    jwt_secret = required_env_var!("JWT_SECRET")?
 
-    log = Logger.new(log_level, write_log!)
-    now! = ws.Time.now! # Use the platform's "get current time" function to get the current time
+    log =
+        log_level =
+            when Env.var!("LOG_LEVEL") is
+                Ok(level_str) ->
+                    LogLevel.from_str(level_str) ? |UnsupportedLevel|
+                        InitFailed("Invalid LOG_LEVEL env var: ${level_str}")
+                Err(VarNotFound) -> default_log_level
 
-    import src/Route { jwt_secret, db, log, now! }
+        Logger.new(log_level, write_log!)
+
+    db_config = {
+        host: required_env_var!("DB_HOST")?,
+        user: required_env_var!("DB_USER")?,
+        database: required_env_var!("DB_NAME")?,
+        port:
+            port_str = required_env_var!("DB_PORT")?
+            port_str.to_u16() ? |InvalidNumStr| InitFailed("Invalid DB_PORT: ${port_str}")?,
+        auth:
+            when Env.var("DB_PASSWORD") is
+                Ok(password) -> Password password
+                Err(VarNotFound) -> None,
+        on_err!: |err| log.error!("Database error: ${err.inspect()}"),
+    }
+
+    db = Db.connect!(db_config) ? InitFailed("Database connection failed: ${db_err.inspect()}")
+
+    import src/Route { jwt_secret, db, log, now!: ws.Time.now! }
 
     Ok(Route.handle_req!)
+
+required_env_var! : Str => Result Str [InitFailed Str]
+required_env_var! = |var_name| ->
+    Env.var!(var_name).map_err(|VarNotFound| InitFailed("${var_name} env var was not set."))
 
 write_log! : |LogLevel, Str| => {}
 write_log! = |level, msg|

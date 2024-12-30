@@ -10,11 +10,12 @@ import Db
 ## Given a user's credentials, log them in and return their UserId.
 login! : { email : Str, password : Str }, Db.Conn => Result UserId [Unauthorized, InternalErr Str]
 login! = |{ email, password }, db|
-    result = Db.first_row!(...) # TODO incorporate email, password, salt, etc.
+    result = db.one_row!(...) # TODO incorporate email, password, salt, etc.
     when result is
         Ok(user_id) -> Ok(user_id)
         Err(NoRows) -> Err(Unauthorized) # Invalid credentials? 401 Unauthorized!
-        Err(other) -> Err(InternalErr(Db.err_to_str(other)))
+        Err(MultipleRows) -> Err(InternalErr("Multiple users somehow matched the email ${email}"))
+        Err(DbErr(str)) -> Err(InternalErr(str))
 
 ## Given a Request and the current time, verify that the token is valid and return its UserId.
 authenticate : Request, Instant -> Result UserId [Unauthorized, BadArg]
