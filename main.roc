@@ -51,10 +51,9 @@ init! = |_args|
     }
 
     db = Db.connect!(db_config) ? InitFailed("Database connection failed: ${db_err.inspect()}")
+    router = Router.{ jwt_secret, db, log, now!: ws.Time.now! }
 
-    import src/Route { jwt_secret, db, log, now!: ws.Time.now! }
-
-    Ok(Route.handle_req!)
+    Ok(|req| router.handle_req!(req))
 
 required_env_var! : Str => Result Str [InitFailed Str]
 required_env_var! = |var_name| ->

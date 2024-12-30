@@ -1,12 +1,20 @@
-module { jwt_secret, log, db, now! } -> [handle_req!]
+module [Router.*, handle_req!]
 
 import http.Request exposing [Request]
 import Article { log, db }
-import Auth { log, db }
 import User { log, db }
+import Auth
 
-handle_req! : Request => Response
-handle_req! = |req|
+Router := {
+    jwt_secret : Str,
+    log : Logger,
+    db : Db,
+    now! : => Instant,
+    auth : Auth
+}
+
+handle_req! : Router, Request => Response
+handle_req! = |{ db }, req|
     method_and_path = req.method_and_path() ??
         return Response.err(400).body("Unrecognized HTTP method: ${method} ${path}")
 

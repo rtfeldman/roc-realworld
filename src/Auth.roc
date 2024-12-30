@@ -8,11 +8,14 @@ import UserId exposing [UserId]
 import Db
 
 ## Given a user's credentials, log them in and return their UserId.
-login! : { email : Str, password : Str }, Db.Conn => Result UserId [Unauthorized, InternalErr Str]
-login! = |{ email, password }, db|
-    result = db.one_row!(...) # TODO incorporate email, password, salt, etc.
-    when result is
-        Ok(user_id) -> Ok(user_id)
+login! : Db, { email : Str, password : Str } => Result UserId [Unauthorized, InternalErr Str]
+login! = |db, { email, password }|
+    when users.find_by_email!(email) is
+        Ok(user) =>
+            if user.password == password then # TODO decrypt, salt, etc.
+                Ok(user.user_id)
+            else
+                Err(InvalidCredentials)
         Err(NoRows) -> Err(Unauthorized) # Invalid credentials? 401 Unauthorized!
         Err(MultipleRows) -> Err(InternalErr("Multiple users somehow matched the email ${email}"))
         Err(DbErr(str)) -> Err(InternalErr(str))
@@ -27,7 +30,7 @@ authenticate = |req, now|
 
 ## Given a Request and the current time, verify that either there is a valid token (in which case
 ## return `SignedIn(UserId)`, or that there is no token (in which case return `SignedOut`).
-auth_optional : |Request, Instant| -> Result [SignedIn UserId, SignedOut] [Unauthorized, BadArg]
+auth_optional : Request, Instant -> Result [SignedIn UserId, SignedOut] [Unauthorized, BadArg]
 auth_optional = |req, now|
     when parse_user_id(req, jwt_secret, now) is
         Ok user_id -> Ok(SignedIn(user_id))
@@ -50,7 +53,7 @@ parse_user_id = |req, jwt_secret, now|
     else
         Ok claims.user_id
 
-auth_header : |UserId, JwtSecret, Instant| -> (Str, Str)
+auth_header : UserId, JwtSecret, Instant -> (Str, Str)
 auth_header = |user_id, jwt_secret, now|
     claims = { sub: user_id.to_str(), std_claims: { expires_at: now + 12h } }
 	  token_str = Jwt.hs256_with_claims(claims).signed_str(jwt_secret)

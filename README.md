@@ -9,6 +9,10 @@ that syntax should exist is trying it out!
 Since this is trying out syntax that doesn't exist, this code can't be compiled or run.
 The point of the repo is to try things out and see how they feel in a larger code base.
 
+## Architecture
+
+There is a separate README in the src/ directory that talks about the architecture of this code base.
+
 ## Dependencies
 
 This is not using a real platform, but rather a hypothetical variant of
