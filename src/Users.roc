@@ -1,6 +1,11 @@
 module [Users, find_by_username!, find_by_email!, get_profile!, login!]
 
-import User exposing [User]
+User : {
+    username : Str,
+    bio : Str,
+    image : [Null, NotNull Str],
+    following : Bool,
+}
 
 Users := { client : Client, log : Logger }
 
