@@ -30,3 +30,36 @@ expect |get!, set!|
     })
 
     Route.handle_req!(req) == Err(NotFound)
+
+## Creating a new account should only persist encrypted password, not plaintext.
+expect |get!, set!|
+    db = get_db(get!, set!)
+    now! = get_now(get!, set!)
+    set!({ now: initial_time, db })
+
+    # TODO make db do the simulation
+
+    import ../src/Route { jwt_secret, log, db, now! }
+
+    username = "example-username"
+    email = "example-email"
+    password = "example-password"
+    token = "example.jwt.token" # TODO jwt from secret
+    req = Request.new({
+        method: "POST",
+        path: "/api/users",
+        headers: [],
+        body: { user: { username, email, password } }.encode(Json.utf8),
+    })
+
+    expected = {
+        user: {
+            email,
+            username,
+            token,
+            bio,
+            image,
+        }
+    }
+
+    Route.handle_req!(req).and_then(.body().decode(Json.utf8)) == Ok(expected_json)

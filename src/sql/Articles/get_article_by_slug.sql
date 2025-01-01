@@ -2,7 +2,6 @@ SELECT
     a.slug AS slug,
     a.title AS title,
     a.description AS description,
-    a.body AS body,
     a.created_at AS created_at,
     a.updated_at AS updated_at,
     a.favorited AS favorited,
@@ -12,6 +11,7 @@ SELECT
     u.image_url AS author_image_url,
     u.following AS author_following,
     string_agg(t.name, ',') AS comma_separated_tags
+    a.body AS body,
 FROM
     articles a
 LEFT JOIN
