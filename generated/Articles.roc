@@ -35,7 +35,7 @@ prepare_all! :
 prepare_all! = |client|
     {
         list_articles: prepare_list_articles!(client)?,
-          get_article_by_slug: prepare_get_article_by_slug!(client)?,
+        get_article_by_slug: prepare_get_article_by_slug!(client)?,
     }
 
 # list_articles.sql

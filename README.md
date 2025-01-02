@@ -34,6 +34,8 @@ own READMEs.
 - Custom types - currently planned
 - Parens-and-commas calling style - currently planned
 - Static dispatch - currently planned
+- `.pass_to()` - there's a plan to do something like this, but it's not 100% which design to try
+- `val.Ok()` as equivalent to `val.pass_to(Ok)` - mentioned in passing once, trying it out
 - Pipe-style lambdas (`|foo, bar|`) - assumed to happen if we also do parens-and-commas
 - `foo : => {}` as the syntax for zero-arg function types - not currently planned, just trying it out
 - Allow `|` to work in nested patterns - uncontroversially nice, but hard to implement

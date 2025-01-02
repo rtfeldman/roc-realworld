@@ -22,19 +22,19 @@ expect import test/AllTests
 default_log_level : LogLevel
 default_log_level = LogLevel.Warn
 
-init! : |List Arg| => Result (Request => Response) [InitFailed Str]
+init! : List Arg => Result (Request => Response) [InitFailed Str]
 init! = |_args|
     jwt_secret = required_env_var!("JWT_SECRET")?
 
     log =
-        log_level =
+        min_level =
             when Env.var!("LOG_LEVEL") is
                 Ok(level_str) ->
                     LogLevel.from_str(level_str) ? |UnsupportedLevel|
                         InitFailed("Invalid LOG_LEVEL env var: ${level_str}")
                 Err(VarNotFound) -> default_log_level
 
-        Logger.new(log_level, write_log!)
+        Logger.new(|level, msg| if level >= min_level then write_log!(level, msg))
 
     db_config = {
         host: required_env_var!("DB_HOST")?,
@@ -47,19 +47,23 @@ init! = |_args|
             when Env.var("DB_PASSWORD") is
                 Ok(password) -> Password password
                 Err(VarNotFound) -> None,
-        on_err!: |err| log.error!("Database error: ${err.inspect()}"),
+        tcp: # TODO give function(s) to do the TCP stuff it needs to do.
+        on_err!: |err| log.error!("db error: ${err.inspect()}"),
     }
 
-    db = Db.connect!(db_config) ? InitFailed("Database connection failed: ${db_err.inspect()}")
+    db = Pg.connect!(db_config) ? |db_err| InitFailed("db connection failed: ${db_err.inspect()}")
+
+    # TODO prepared statements need to happen here
+
     router = Router.{ jwt_secret, db, log, now!: ws.Time.now! }
 
-    Ok(|req| router.handle_req!(req))
+    Ok(|req| Router.handle_req!(router, req))
 
 required_env_var! : Str => Result Str [InitFailed Str]
-required_env_var! = |var_name| ->
+required_env_var! = |var_name|
     Env.var!(var_name).map_err(|VarNotFound| InitFailed("${var_name} env var was not set."))
 
-write_log! : |LogLevel, Str| => {}
+write_log! : LogLevel, Str => {}
 write_log! = |level, msg|
     # If writing to stderr fails when logging, ignore the error
     ws.Stderr.line!("${level.to_str()}: ${msg}") ?? {}
