@@ -9,7 +9,7 @@ Router := {
     jwt_secret : Str,
     log : Logger,
     db : Db,
-    now! : => Instant,
+    now! : {} => Instant,
 }
 
 handle_req! : Router, Request => Response
@@ -26,13 +26,14 @@ handle_req! = |{ jwt_secret, log, db, now! }, req|
     # Helpers for authenticating (if necessary) and/or parsing the body as JSON.
     # These are defined here so they can close over `req`. If desired, helper functions
     # could extract some of this code elsewhere, but they're so short already, I didn't bother.
-    auth! = |handle!| Auth.authenticate(req, now!()).and_then!(handle!).pass_to(to_resp)
-    auth_optional! = |handle!| Auth.auth_optional(req, now!()).and_then!(handle!).pass_to(to_resp)
-    from_json! = |handle!| req.body().decode(Json.utf8).and_then!(handle!).pass_to(to_resp)
+    auth! = |handle!| to_resp(Auth.authenticate(req, now!()).and_then!(handle!))
+    auth_optional! = |handle!| to_resp(Auth.auth_optional(req, now!()).and_then!(handle!))
+    from_json! = |handle!| to_resp(req.body().decode(Json.utf8).and_then!(handle!))
     from_json_auth! = |handle!|
-        auth(req, now!())
-        .and_then!(|user_id| handle!(user_id, req.body().decode(Json.utf8)?))
-        .pass_to(to_resp)
+        to_resp(
+            auth(req, now!())
+            .and_then!(|user_id| handle!(user_id, req.body().decode(Json.utf8)?))
+        )
 
     when (method, path) is
         (GET, "/articles/${slug}") ->

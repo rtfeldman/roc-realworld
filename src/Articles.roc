@@ -54,8 +54,9 @@ get_by_slug! = |{ client, prepared }, slug|
                     following: row.author_following,
                 },
             })
-            .encode(Json.utf8_with({ transform: CamelCase }))
-            .Ok()
+            .encode(Json.utf8.transform(CamelCase))
+            .(Ok)
+
         Ok([]) -> Err(NotFound)
         Ok([..]) -> Err(InternalErr("Multiple articles found for the slug ${slug.inspect()}"))
         Err(db_err) -> Err(InternalErr(db_err.inspect()))
@@ -107,9 +108,9 @@ list! = |{ client, prepared }, opt_user_id, query_params|
                 }),
                 articles_count: rows.len(),
             }
-            .encode(Json.utf8_with({ transform: CamelCase }))
-            .Ok()
-      Err(db_err) -> Err(InternalErr(db_err.inspect()))
+            .encode(Json.utf8.transform(CamelCase))
+            .(Ok)
+        Err(db_err) -> Err(InternalErr(db_err.inspect()))
 
 update! : Articles, UserId, Str, UpdateArticle => Result Article [NotFound, Forbidden, InternalErr Str]
 update! = |{ client, prepared }, user_id, slug, update_article|
@@ -123,7 +124,7 @@ update! = |{ client, prepared }, user_id, slug, update_article|
 
     when client.query!(cmd) is
         Ok([row]) ->
-            Article.fromRow(row).Ok()
+            Article.fromRow(row).(Ok)
         Ok([]) ->
             Err(NotFound)
         Err(db_err) ->
@@ -141,21 +142,21 @@ delete! = |{ client, prepared }, user_id, slug|
         Err(db_err) ->
             Err(InternalErr(db_err.inspect()))
 
-feed! : Articles, UserId, List (Str, Str) => Result (List U8) [InternalErr Str]
+feed! : Articles, UserId, QueryParams => Result (List U8) [InternalErr Str]
 feed! = |{ client, prepared }, user_id, query_params|
-    limit = query_params.get("limit").map(.to_u64()) ?? 20
-    offset = query_params.get("offset").map(.to_u64()) ?? 0
+    limit = query_params.get("limit").map_ok(.to_u64()) ?? 20
+    offset = query_params.get("offset").map_ok(.to_u64()) ?? 0
     cmd = prepared.get_feed.bind(u64(user_id), limit, offset)
 
     when client.query!(cmd) is
         Ok(rows) ->
-            articles = rows.map(Article.fromRow)
+            articles = rows.map(Article.from_row)
             {
                 articles,
                 articles_count: articles.len(),
             }
-            .encode(Json.utf8_with({ transform: CamelCase }))
-            .Ok()
+            .encode(Json.utf8.transform(CamelCase))
+            .(Ok)
         Err(db_err) ->
             Err(InternalErr(db_err.inspect()))
 
@@ -172,7 +173,7 @@ favorite! = |{ client, prepared }, user_id, slug|
 
     when client.query!(cmd) is
         Ok([row]) ->
-            Article.fromRow(row).Ok()
+            Article.fromRow(row).(Ok)
         Ok([]) ->
             Err(NotFound)
         Err(db_err) ->
@@ -191,7 +192,7 @@ unfavorite! = |{ client, prepared }, user_id, slug|
       # WHERE a.slug = $2
     when client.query!(cmd) is
         Ok([row]) ->
-            Article.fromRow(row).Ok()
+            Article.fromRow(row).(Ok)
         Ok([]) ->
             Err(NotFound)
         Err(db_err) ->

@@ -55,7 +55,7 @@ init! = |_args|
 
     # TODO prepared statements need to happen here
 
-    router = Router.{ jwt_secret, db, log, now!: ws.Time.now! }
+    router = Router.{ jwt_secret, db, log, now!: ws.Clock.now! }
 
     Ok(|req| Router.handle_req!(router, req))
 
