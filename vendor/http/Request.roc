@@ -18,6 +18,8 @@ header = |req, _header_name|
     for (name, value) in req.headers.iter() do
         if name == header_name then
             return Ok(value)
+        end
+    end
 
     Err(HeaderNotFound)
 

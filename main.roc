@@ -33,6 +33,7 @@ init! = |_args|
                     LogLevel.from_str(level_str) ? |UnsupportedLevel|
                         InitFailed("Invalid LOG_LEVEL env var: ${level_str}")
                 Err(VarNotFound) -> default_log_level
+            end
 
         Logger.new(|level, msg| if level >= min_level then write_log!(level, msg))
 

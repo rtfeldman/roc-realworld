@@ -22,6 +22,7 @@ handle_req! = |{ jwt_secret, log, db, now! }, req|
         when req.path().split_first("/api") is
             Ok({ before: "", after }) -> after
             _ -> return Response.err(404)
+        end
 
     # Helpers for authenticating (if necessary) and/or parsing the body as JSON.
     # These are defined here so they can close over `req`. If desired, helper functions
@@ -34,6 +35,7 @@ handle_req! = |{ jwt_secret, log, db, now! }, req|
             auth(req, now!())
             .and_then!(|user_id| handle!(user_id, req.body().decode(Json.utf8)?))
         )
+    end
 
     when (method, path) is
         (GET, "/articles/${slug}") ->
