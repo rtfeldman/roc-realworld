@@ -32,9 +32,10 @@ init! = |_args|
                 LogLevel.from_str(level_str) ? |UnsupportedLevel|
                     InitFailed("Invalid LOG_LEVEL env var: ${level_str}")
             Err(VarNotFound) -> default_log_level
+        end
 
     log =
-        Logger.new(|level, msg| if level >= min_level then write_log!(level, msg))
+        Logger.new(|level, msg| if level >= min_level then write_log!(level, msg) end)
 
     db_config = {
         host: required_env_var!("DB_HOST")?,
@@ -46,7 +47,8 @@ init! = |_args|
         auth:
             when Env.var("DB_PASSWORD") is
                 Ok(password) -> Password password
-                Err(VarNotFound) -> None,
+                Err(VarNotFound) -> None
+            end,
         tcp: # TODO give function(s) to do the TCP stuff it needs to do.
         on_err!: |err| log.error!("db error: ${err.inspect()}"),
     }
