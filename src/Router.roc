@@ -28,12 +28,12 @@ handle_req! = |{ jwt_secret, log, db, now! }, req|
     # could extract some of this code elsewhere, but they're so short already, I didn't bother.
     auth! = |handle!| to_resp(Auth.authenticate(req, now!()).and_then!(handle!))
     auth_optional! = |handle!| to_resp(Auth.auth_optional(req, now!()).and_then!(handle!))
-    from_json! = |handle!| to_resp(req.body().decode(Json.utf8).and_then!(handle!))
     from_json_auth! = |handle!|
         to_resp(
             auth(req, now!())
             .and_then!(|user_id| handle!(user_id, req.body().decode(Json.utf8)?))
         )
+    from_json! = |handle!| to_resp(req.body().decode(Json.utf8).and_then!(handle!))
 
     when (method, path) is
         (GET, "/articles/${slug}") ->

@@ -15,9 +15,10 @@ new = |{ method, path, headers }| Request.{ method, path, headers }
 
 header : Request, Str -> Result Str [NotFound]
 header = |req, _header_name|
-    for (name, value) in req.headers.iter() do
+    for (name, value) in req.headers.iter() (
         if name == header_name then
             return Ok(value)
+    )
 
     Err(HeaderNotFound)
 
