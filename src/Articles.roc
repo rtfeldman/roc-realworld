@@ -60,7 +60,6 @@ get_by_slug! = |{ client, prepared }, slug|
         Ok([]) -> Err(NotFound)
         Ok([..]) -> Err(InternalErr("Multiple articles found for the slug ${slug.inspect()}"))
         Err(db_err) -> Err(InternalErr(db_err.inspect()))
-    end
 
 list! :
     Articles,
@@ -112,7 +111,6 @@ list! = |{ client, prepared }, opt_user_id, query_params|
             .encode(Json.utf8.transform(CamelCase))
             .(Ok)
         Err(db_err) -> Err(InternalErr(db_err.inspect()))
-    end
 
 update! : Articles, UserId, Str, UpdateArticle => Result Article [NotFound, Forbidden, InternalErr Str]
 update! = |{ client, prepared }, user_id, slug, update_article|
@@ -131,9 +129,8 @@ update! = |{ client, prepared }, user_id, slug, update_article|
             Err(NotFound)
         Err(db_err) ->
             Err(InternalErr(db_err.inspect()))
-    end
 
-delete! : Articles, UserId, Str => Result () [NotFound, Forbidden, InternalErr Str]
+delete! : Articles, UserId, Str => Result {} [NotFound, Forbidden, InternalErr Str]
 delete! = |{ client, prepared }, user_id, slug|
     cmd = prepared.delete_article.bind(slug, u64(user_id))
 
@@ -141,122 +138,19 @@ delete! = |{ client, prepared }, user_id, slug|
         Ok(0) ->
             Err(NotFound)
         Ok(_) ->
-            Ok(())
+            Ok({})
         Err(db_err) ->
             Err(InternalErr(db_err.inspect()))
-    end
-
-
-
-Eq {
-   is_eq : a, a -> Bool
-      where a implements Eq
-}
-
-AssocList.roc
-
-    insert : ...
-    remove : ...
-
-    equals : AssocList k v, AssocList k v -> Bool
-        where
-            k.equals(k) -> Bool,
-            v.equals(v) -> Bool,
-
-user = Decode.decode(json_bytes, Json.utf8)
-
-user = JSON.parse(json_str)
-
-user = UserDecoder. [...]
-
-{ x: 5, y: 7 } == { x: 1, y: 6 }
-
-List.roc
-    equals : List a, List a -> Bool
-        where a.Eq
-
-Eq a : a.equals(a) -> Bool
-
-now!() + 4.(hours)
-now!() + 4.hours()
-
-1
-1.0
-0x1
-
-anything + 1
-frac + 1.0
-int + 0x1
-
-
 
 feed! : Articles, UserId, QueryParams => Result (List U8) [InternalErr Str]
 feed! = |{ client, prepared }, user_id, query_params|
-    limit = query_params.get("limit").try(.to_u64()) ?? 20
-    limit =
-        Params.get(query_params, "limit")
-        |> Result.map(.to_u64())
-        ?? 20
-    offset = query_params.get("offset").try(.to_u64()) ?? 0
+    limit = query_params.get("limit").map_ok(.to_u64()) ?? 20
+    offset = query_params.get("offset").map_ok(.to_u64()) ?? 0
     cmd = prepared.get_feed.bind(u64(user_id), limit, offset)
 
     when client.query!(cmd) is
         Ok(rows) ->
             articles = rows.map(Article.from_row)
-            articles = List.map(rows, Article.from_row)
-
-            is_empty = my_string.is_empty()
-            pluralized = StrExtra.pluralize(my_string)
-            is_empty = 4.(hours)().ago()
-            is_empty = 4.<hours>().ago()
-            is_empty = 4.(hours).ago()
-            is_empty = my_string.pluralize()
-            is_empty = my_string.pass_to(pluralize)
-            is_empty = my_string.pass_to(StrExtra.pluralize)
-            is_empty = my_string.(StrExtra.pluralize)
-            is_empty = my_string.(StrExtra.pluralize)(arg2, arg3)
-            is_empty = my_string.(pluralize)(arg2, arg3).other_thing()
-            is_empty = (my_string |> pluralize(arg2, arg3)).other_thing()
-
-            1+2 * 3
-
-            is_empty =
-                my_string
-                |> pluralize(arg2, arg3)
-                .other_thing()
-            is_empty = my_string.@StrMod.pluralize(arg2, arg3).other_thing()
-
-            import Str except [is_empty]
-            import StrExtra exposing [pluralize]
-
-            Num.add : Num a, Num a -> Num a
-
-            Num.plus : Num a, Num a -> Num a
-
-            duration(days: 3, hour: 1) |> ago()
-            1.hour.ago
-
-            Num.add : a, a -> a
-                where a implements Add
-
-            a + b
-
-            Num.add(a, b)
-
-            a.plus(b)
-
-            a == b
-
-            Bool.is_eq(a, b)
-
-
-            a.equals(b)
-
-            equals : MyHashMap, ... -> Bool
-
-
-            is_empty = my_string.is_empty()
-
             {
                 articles,
                 articles_count: articles.len(),

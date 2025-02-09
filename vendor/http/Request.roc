@@ -48,7 +48,6 @@ params = |req|
             Err(NotFound) -> (param, "")
     )
 
-
 params : Request -> List (Str, Str)
 params = |req|
     req
@@ -59,12 +58,3 @@ params = |req|
     .split_on("&")
     .map(|param| param.split_first("=") ?? (param, ""))
 
-params : Request -> List (Str, Str)
-params = |req|
-    req
-    |> Request.path
-    |> Str.split_first "?"
-    |> Result.map .1
-    |> Result.with_default ""
-    |> Str.split_on "&"
-    |> List.map |param| Str.split_first "=" ?? (param, "")

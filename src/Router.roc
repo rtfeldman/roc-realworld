@@ -1,4 +1,4 @@
-module [Router, handle_req!]
+module [Router.*, handle_req!]
 
 import http.Request exposing [Request]
 import Article { log, db }
@@ -9,7 +9,7 @@ Router := {
     jwt_secret : Str,
     log : Logger,
     db : Db,
-    now! : () => Instant,
+    now! : {} => Instant,
 }
 
 handle_req! : Router, Request => Response
@@ -98,7 +98,7 @@ ResponseErr : [
     InternalErr(Str)
 ]
 
-to_resp : Result (List U8) ResponseErr -> Task Response []
+to_resp : Result (List U8) ResponseErr -> Response
 to_resp = |result|
     when result is
         Ok(json_bytes) ->
