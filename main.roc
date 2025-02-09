@@ -63,7 +63,7 @@ required_env_var! : Str => Result Str [InitFailed Str]
 required_env_var! = |var_name|
     Env.var!(var_name).map_err(|VarNotFound| InitFailed("${var_name} env var was not set."))
 
-write_log! : LogLevel, Str => {}
+write_log! : LogLevel, Str => ()
 write_log! = |level, msg|
     # If writing to stderr fails when logging, ignore the error
-    ws.Stderr.line!("${level.to_str()}: ${msg}") ?? {}
+    ws.Stderr.line!("${level.to_str()}: ${msg}") ?? ()
