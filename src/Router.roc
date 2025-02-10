@@ -84,7 +84,7 @@ handle_req! = |{ jwt_secret, log, db, now! }, req|
                     _ -> return Response.err(404)
             )
         (OPTIONS, path) ->
-              handle_cors(req.headers(), path)
+            handle_cors(req.headers(), path)
         _ -> Response.err(404)
 
 # Internal helpers - these parse authentication headers, return appropriate error codes if

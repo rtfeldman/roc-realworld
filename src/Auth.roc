@@ -3,7 +3,7 @@ module [login!, auth_header, authenticate, auth_optional]
 import jwt.Jwt
 import jwt.JwtSecret exposing [JwtSecret]
 import http.Request exposing [Request]
-import time.Duration exposing [hours]
+import time.Duration exposing [hour, hours]
 import UserId exposing [UserId]
 import Db
 
@@ -49,9 +49,9 @@ parse_user_id = |req, jwt_secret, now|
     Jwt.{ claims } = Jwt.parse(token_str, jwt_secret) ? InvalidJwt
 
     if claims.expires_at < now then
-        Err TokenExpired
+        Err(TokenExpired)
     else
-        Ok claims.user_id
+        Ok(claims.user_id)
 
 auth_header : UserId, JwtSecret, Instant -> (Str, Str)
 auth_header = |user_id, jwt_secret, now|
@@ -66,7 +66,7 @@ expect
     now = time.Instant.from_ns_since_utc_epoch(123456789)
     user_id = UserId.from_str(123)
     jwt_secret = JwtSecret.from_str("abcdefg")
-    expired_time = now + 1h
+    expired_time = now + 1.(hour)
     headers = [auth_header(user_id, jwt_secret, expired_time)]
     request = Request.new({ method: "GET", path: "/", headers })
 
@@ -77,7 +77,7 @@ expect
     now = time.Instant.from_ns_since_utc_epoch(123456789)
     user_id = UserId.from_str(123)
     jwt_secret = JwtSecret.from_str("abcdefg")
-    expired_time = now - 1h
+    expired_time = now - 1.(hour)
     headers = [auth_header(user_id, jwt_secret, expired_time)]
     request = Request.new({ method: "GET", path: "/", headers })
 
