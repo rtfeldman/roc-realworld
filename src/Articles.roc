@@ -19,18 +19,19 @@ prepare! : Client => Result Articles DbErr
 prepare! = |client|
     Ok({ client, prepared: ArticlesSql.prepare_all!(client)? })
 
+NewArticle : {
+    title : Str,
+    description : Str,
+    body : Str,
+    tags : List Str,
+}
+
 insert! : Articles, UserId, NewArticle => Result Article [InternalErr Str]
 insert! = |{ client, prepared }, author_id, new_article|
     # TODO https://realworld-docs.netlify.app/specifications/backend/endpoints/#create-article
     # TODO make insert_article.sql etc.
     cmd = prepared.insert_article.bind(u64(author_id), ...)
 
-    NewArticle : {
-        title : Str,
-        description : Str,
-        body : Str,
-        tags : List Str,
-    }
     client.command!(cmd)
 
 get_by_slug! : Articles, Str => Result (List U8) [NotFound, InternalErr Str]
