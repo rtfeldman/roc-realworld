@@ -61,6 +61,7 @@ get_by_slug! = |{ client, prepared }, slug|
         Ok([]) -> Err(NotFound)
         Ok([..]) -> Err(InternalErr("Multiple articles found for the slug ${slug.inspect()}"))
         Err(db_err) -> Err(InternalErr(db_err.inspect()))
+    end
 
 list! :
     Articles,
@@ -112,6 +113,7 @@ list! = |{ client, prepared }, opt_user_id, query_params|
             .encode(Json.utf8.transform(CamelCase))
             .(Ok)
         Err(db_err) -> Err(InternalErr(db_err.inspect()))
+    end
 
 update! : Articles, UserId, Str, UpdateArticle => Result Article [NotFound, Forbidden, InternalErr Str]
 update! = |{ client, prepared }, user_id, slug, update_article|
@@ -130,6 +132,7 @@ update! = |{ client, prepared }, user_id, slug, update_article|
             Err(NotFound)
         Err(db_err) ->
             Err(InternalErr(db_err.inspect()))
+    end
 
 delete! : Articles, UserId, Str => Result {} [NotFound, Forbidden, InternalErr Str]
 delete! = |{ client, prepared }, user_id, slug|
@@ -142,6 +145,7 @@ delete! = |{ client, prepared }, user_id, slug|
             Ok({})
         Err(db_err) ->
             Err(InternalErr(db_err.inspect()))
+    end
 
 feed! : Articles, UserId, QueryParams => Result (List U8) [InternalErr Str]
 feed! = |{ client, prepared }, user_id, query_params|
@@ -160,6 +164,7 @@ feed! = |{ client, prepared }, user_id, query_params|
             .(Ok)
         Err(db_err) ->
             Err(InternalErr(db_err.inspect()))
+    end
 
 favorite! : Articles, UserId, Str => Result Article [NotFound, InternalErr Str]
 favorite! = |{ client, prepared }, user_id, slug|
@@ -179,6 +184,7 @@ favorite! = |{ client, prepared }, user_id, slug|
             Err(NotFound)
         Err(db_err) ->
             Err(InternalErr(db_err.inspect()))
+    end
 
 unfavorite! : Articles, UserId, Str => Result Article [NotFound, InternalErr Str]
 unfavorite! = |{ client, prepared }, user_id, slug|
@@ -198,3 +204,4 @@ unfavorite! = |{ client, prepared }, user_id, slug|
             Err(NotFound)
         Err(db_err) ->
             Err(InternalErr(db_err.inspect()))
+    end

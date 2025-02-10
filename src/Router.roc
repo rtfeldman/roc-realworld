@@ -22,18 +22,19 @@ handle_req! = |{ jwt_secret, log, db, now! }, req|
         when req.path().split_first("/api") is
             Ok({ before: "", after }) -> after
             _ -> return Response.err(404)
+        end
 
     # Helpers for authenticating (if necessary) and/or parsing the body as JSON.
     # These are defined here so they can close over `req`. If desired, helper functions
     # could extract some of this code elsewhere, but they're so short already, I didn't bother.
     auth! = |handle!| to_resp(Auth.authenticate(req, now!()).and_then!(handle!))
     auth_optional! = |handle!| to_resp(Auth.auth_optional(req, now!()).and_then!(handle!))
+    from_json! = |handle!| to_resp(req.body().decode(Json.utf8).and_then!(handle!))
     from_json_auth! = |handle!|
         to_resp(
             auth(req, now!())
             .and_then!(|user_id| handle!(user_id, req.body().decode(Json.utf8)?))
         )
-    from_json! = |handle!| to_resp(req.body().decode(Json.utf8).and_then!(handle!))
 
     when (method, path) is
         (GET, "/articles/${slug}") ->

@@ -15,10 +15,11 @@ new = |{ method, path, headers }| Request.{ method, path, headers }
 
 header : Request, Str -> Result Str [NotFound]
 header = |req, _header_name|
-    for (name, value) in req.headers.iter() (
+    for (name, value) in req.headers.iter() do
         if name == header_name then
             return Ok(value)
-    )
+        end
+    end
 
     Err(HeaderNotFound)
 
@@ -47,6 +48,7 @@ params = |req|
         when param.split_first("=") is
             Ok({ before, after }) -> (before, after)
             Err(NotFound) -> (param, "")
+        end
     )
 
 params : Request -> List (Str, Str)
