@@ -26,15 +26,14 @@ init! : List Arg => Result (Request => Response) [InitFailed Str]
 init! = |_args|
     jwt_secret = required_env_var!("JWT_SECRET")?
 
-    log =
-        min_level = (
-            when Env.var!("LOG_LEVEL") is
-                Ok(level_str) ->
-                    LogLevel.from_str(level_str) ? |UnsupportedLevel|
-                        InitFailed("Invalid LOG_LEVEL env var: ${level_str}")
-                Err(VarNotFound) -> default_log_level
-        )
+    min_level =
+        when Env.var!("LOG_LEVEL") is
+            Ok(level_str) ->
+                LogLevel.from_str(level_str) ? |UnsupportedLevel|
+                    InitFailed("Invalid LOG_LEVEL env var: ${level_str}")
+            Err(VarNotFound) -> default_log_level
 
+    log =
         Logger.new(|level, msg| if level >= min_level then write_log!(level, msg))
 
     db_config = {
