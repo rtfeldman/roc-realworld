@@ -3,7 +3,7 @@ module [login!, auth_header, authenticate, auth_optional]
 import jwt.Jwt
 import jwt.JwtSecret exposing [JwtSecret]
 import http.Request exposing [Request]
-import time.Duration exposing [h]
+import time.Duration exposing [hours]
 import UserId exposing [UserId]
 import Db
 
@@ -55,7 +55,7 @@ parse_user_id = |req, jwt_secret, now|
 
 auth_header : UserId, JwtSecret, Instant -> (Str, Str)
 auth_header = |user_id, jwt_secret, now|
-    claims = { sub: user_id.to_str(), std_claims: { expires_at: now + 12h } }
+    claims = { sub: user_id.to_str(), std_claims: { expires_at: now + 12.(hours) } }
 	  token_str = Jwt.hs256_with_claims(claims).signed_str(jwt_secret)
 
     # Auth header format: https://realworld-docs.netlify.app/specifications/backend/endpoints/
