@@ -57,4 +57,3 @@ params = |req|
     .with_default("")
     .split_on("&")
     .map(|param| param.split_first("=") ?? (param, ""))
-
