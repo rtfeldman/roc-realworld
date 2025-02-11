@@ -33,10 +33,10 @@ authenticate = |req, now|
 auth_optional : Request, Instant -> Result [SignedIn UserId, SignedOut] [Unauthorized, BadArg]
 auth_optional = |req, now|
     when parse_user_id(req, jwt_secret, now) is
-        Ok user_id -> Ok(SignedIn(user_id))
-        Err MissingToken -> Ok(SignedOut)
-        Err (InvalidJwt _) -> Err(BadArg)
-        Err TokenExpired -> Err(Unauthorized)
+        Ok(user_id) -> Ok(SignedIn(user_id))
+        Err(MissingToken) -> Ok(SignedOut)
+        Err(InvalidJwt(_)) -> Err(BadArg)
+        Err(TokenExpired) -> Err(Unauthorized)
 
 ## Parse the UserId from the request header. Used in `authenticate` and `auth_optional`.
 parse_user_id :

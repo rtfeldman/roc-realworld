@@ -91,6 +91,7 @@ list! = |{ client, prepared }, opt_user_id, query_params|
         Ok(rows) ->
             # JSON format: https://realworld-docs.netlify.app/specifications/backend/api-response-format/#multiple-articles
             {
+                articles_count: rows.len(),
                 articles: rows.map(|row| {
                     slug: row.slug,
                     title: row.title,
@@ -107,7 +108,6 @@ list! = |{ client, prepared }, opt_user_id, query_params|
                         following: row.author_following,
                     },
                 }),
-                articles_count: rows.len(),
             }
             .encode(Json.utf8.transform(CamelCase))
             .(Ok)
@@ -124,24 +124,18 @@ update! = |{ client, prepared }, user_id, slug, update_article|
     )
 
     when client.query!(cmd) is
-        Ok([row]) ->
-            Article.fromRow(row).(Ok)
-        Ok([]) ->
-            Err(NotFound)
-        Err(db_err) ->
-            Err(InternalErr(db_err.inspect()))
+        Ok([row]) -> Article.from_row(row).(Ok)
+        Ok([]) -> Err(NotFound)
+        Err(db_err) -> Err(InternalErr(db_err.inspect()))
 
 delete! : Articles, UserId, Str => Result {} [NotFound, Forbidden, InternalErr Str]
 delete! = |{ client, prepared }, user_id, slug|
     cmd = prepared.delete_article.bind(slug, u64(user_id))
 
     when client.execute!(cmd) is
-        Ok(0) ->
-            Err(NotFound)
-        Ok(_) ->
-            Ok({})
-        Err(db_err) ->
-            Err(InternalErr(db_err.inspect()))
+        Ok(0) -> Err(NotFound)
+        Ok(_) -> Ok({})
+        Err(db_err) -> Err(InternalErr(db_err.inspect()))
 
 feed! : Articles, UserId, QueryParams => Result (List U8) [InternalErr Str]
 feed! = |{ client, prepared }, user_id, query_params|
@@ -151,10 +145,9 @@ feed! = |{ client, prepared }, user_id, query_params|
 
     when client.query!(cmd) is
         Ok(rows) ->
-            articles = rows.map(Article.from_row)
             {
-                articles,
-                articles_count: articles.len(),
+                articles_count: rows.len(),
+                articles: rows.map(Article.from_row),
             }
             .encode(Json.utf8.transform(CamelCase))
             .(Ok)
@@ -173,12 +166,9 @@ favorite! = |{ client, prepared }, user_id, slug|
     cmd = prepared.favorite_article.bind(u64(user_id), slug)
 
     when client.query!(cmd) is
-        Ok([row]) ->
-            Article.fromRow(row).(Ok)
-        Ok([]) ->
-            Err(NotFound)
-        Err(db_err) ->
-            Err(InternalErr(db_err.inspect()))
+        Ok([row]) -> Article.from_row(row).(Ok)
+        Ok([]) -> Err(NotFound)
+        Err(db_err) -> Err(InternalErr(db_err.inspect()))
 
 unfavorite! : Articles, UserId, Str => Result Article [NotFound, InternalErr Str]
 unfavorite! = |{ client, prepared }, user_id, slug|

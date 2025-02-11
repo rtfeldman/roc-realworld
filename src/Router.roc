@@ -9,7 +9,7 @@ Router := {
     jwt_secret : Str,
     log : Logger,
     db : Db,
-    now! : {} => Instant,
+    now! : () => Instant,
 }
 
 handle_req! : Router, Request => Response
