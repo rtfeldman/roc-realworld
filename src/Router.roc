@@ -13,29 +13,30 @@ Router := {
 }
 
 handle_req! : Router, Request => Response
-handle_req! = |{ jwt_secret, log, db, now! }, req|
+handle_req! = |{ jwt_secret, log, db, now! }, req| {
     method = req.method() ??
         return Response.err(400).body("Unsupported HTTP method: ${method} (path was ${req.path().inspect()})")
 
     # All our valid paths start with "/api". We trim that off so we don't bother matching it later.
     path =
-        when req.path().split_first("/api") is
+        match req.path().split_first("/api") {
             Ok({ before: "", after }) -> after
             _ -> return Response.err(404)
+        }
 
     # Helpers for authenticating (if necessary) and/or parsing the body as JSON.
     # These are defined here so they can close over `req`. If desired, helper functions
     # could extract some of this code elsewhere, but they're so short already, I didn't bother.
     auth! = |handle!| to_resp(Auth.authenticate(req, now!()).and_then!(handle!))
     auth_optional! = |handle!| to_resp(Auth.auth_optional(req, now!()).and_then!(handle!))
-    from_json! = |handle!| to_resp(req.body().decode(Json.utf8).and_then!(handle!))
+    from_json! = |handle!| to_resp(req.body().decode(Json.utf8).and_then!(handle!)))
     from_json_auth! = |handle!|
         to_resp(
             auth(req, now!())
             .and_then!(|user_id| handle!(user_id, req.body().decode(Json.utf8)?))
         )
 
-    when (method, path) is
+    match (method, path) {
         (GET, "/articles/${slug}") ->
             auth_optional!(|opt_user_id| db.articles.get_by_slug!(opt_user_id, slug))
         (GET, "/articles") ->
@@ -86,6 +87,8 @@ handle_req! = |{ jwt_secret, log, db, now! }, req|
         (OPTIONS, path) ->
             handle_cors(req.headers(), path)
         _ -> Response.err(404)
+    }
+}
 
 # Internal helpers - these parse authentication headers, return appropriate error codes if
 # required authentication is missing or invalid, and then encode the response as JSON.
@@ -100,7 +103,7 @@ ResponseErr : [
 
 to_resp : Result (List U8) ResponseErr -> Response
 to_resp = |result|
-    when result is
+    match result {
         Ok(json_bytes) ->
             Response.ok()
             .body(json_bytes)
@@ -113,3 +116,4 @@ to_resp = |result|
             Response.err(500)
             .body(str)
             .header("Content-Type", "text/plain; charset=utf-8")
+    }
