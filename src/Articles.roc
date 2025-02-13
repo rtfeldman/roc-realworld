@@ -15,7 +15,7 @@ Articles := {
     prepared : ArticlesSql.PreparedArticles,
 }
 
-prepare! : Client => Result Articles DbErr
+prepare! : Client => Result(Articles, DbErr)
 prepare! = |client|
     Ok({ client, prepared: ArticlesSql.prepare_all!(client)? })
 
@@ -23,10 +23,10 @@ NewArticle : {
     title : Str,
     description : Str,
     body : Str,
-    tags : List Str,
+    tags : List(Str),
 }
 
-insert! : Articles, UserId, NewArticle => Result Article [InternalErr Str]
+insert! : Articles, UserId, NewArticle => Result(Article, [InternalErr(Str)])
 insert! = |{ client, prepared }, author_id, new_article| {
     # TODO https://realworld-docs.netlify.app/specifications/backend/endpoints/#create-article
     # TODO make insert_article.sql etc.
@@ -35,7 +35,7 @@ insert! = |{ client, prepared }, author_id, new_article| {
     client.command!(cmd)
 }
 
-get_by_slug! : Articles, Str => Result (List U8) [NotFound, InternalErr Str]
+get_by_slug! : Articles, Str => Result(List(U8), [NotFound, InternalErr(Str)])
 get_by_slug! = |{ client, prepared }, slug|
     match ArticlesSql.get_article_by_slug!(client, prepared.get_article_by_slug, slug) {
         Ok([row]) ->
@@ -66,9 +66,9 @@ get_by_slug! = |{ client, prepared }, slug|
 
 list! :
     Articles,
-    [SignedIn UserId, SignedOut],
-    List (Str, Str),
-    => Result (List U8) [InternalErr Str]
+    [SignedIn(UserId), SignedOut],
+    List((Str, Str)),
+    => Result(List(U8), [InternalErr(Str)])
 list! = |{ client, prepared }, opt_user_id, query_params| {
     {
         limit : U64,
@@ -117,7 +117,7 @@ list! = |{ client, prepared }, opt_user_id, query_params| {
     }
 }
 
-update! : Articles, UserId, Str, UpdateArticle => Result Article [NotFound, Forbidden, InternalErr Str]
+update! : Articles, UserId, Str, UpdateArticle => Result(Article, [NotFound, Forbidden, InternalErr(Str)])
 update! = |{ client, prepared }, user_id, slug, update_article| {
     cmd = prepared.update_article.bind(
         update_article.title,
@@ -134,7 +134,7 @@ update! = |{ client, prepared }, user_id, slug, update_article| {
     }
 }
 
-delete! : Articles, UserId, Str => Result {} [NotFound, Forbidden, InternalErr Str]
+delete! : Articles, UserId, Str => Result({}, [NotFound, Forbidden, InternalErr(Str)])
 delete! = |{ client, prepared }, user_id, slug| {
     cmd = prepared.delete_article.bind(slug, u64(user_id))
 
@@ -145,7 +145,7 @@ delete! = |{ client, prepared }, user_id, slug| {
     }
 }
 
-feed! : Articles, UserId, QueryParams => Result (List U8) [InternalErr Str]
+feed! : Articles, UserId, QueryParams => Result(List(U8), [InternalErr(Str)])
 feed! = |{ client, prepared }, user_id, query_params| {
     limit = query_params.get("limit").map_ok(.to_u64()) ?? 20
     offset = query_params.get("offset").map_ok(.to_u64()) ?? 0
@@ -164,7 +164,7 @@ feed! = |{ client, prepared }, user_id, query_params| {
     }
 }
 
-favorite! : Articles, UserId, Str => Result Article [NotFound, InternalErr Str]
+favorite! : Articles, UserId, Str => Result(Article, [NotFound, InternalErr(Str)])
 favorite! = |{ client, prepared }, user_id, slug| {
     # TODO after favoriting, need to run this separate query to return the article. Code sharing seems reasonable here.
 
@@ -182,7 +182,7 @@ favorite! = |{ client, prepared }, user_id, slug| {
     }
 }
 
-unfavorite! : Articles, UserId, Str => Result Article [NotFound, InternalErr Str]
+unfavorite! : Articles, UserId, Str => Result(Article, [NotFound, InternalErr(Str)])
 unfavorite! = |{ client, prepared }, user_id, slug| {
     cmd = prepared.unfavorite_article.bind(u64(user_id), slug)
 

@@ -22,7 +22,7 @@ expect import test/AllTests
 default_log_level : LogLevel
 default_log_level = LogLevel.Warn
 
-init! : List Arg => Result (Request => Response) [InitFailed Str]
+init! : List(Arg) => Result((Request => Response), [InitFailed(Str)])
 init! = |_args| {
     jwt_secret = required_env_var!("JWT_SECRET")?
 
@@ -61,7 +61,7 @@ init! = |_args| {
     Ok(|req| Router.handle_req!(router, req))
 }
 
-required_env_var! : Str => Result Str [InitFailed Str]
+required_env_var! : Str => Result(Str, [InitFailed(Str)])
 required_env_var! = |var_name|
     Env.var!(var_name).map_err(|VarNotFound| InitFailed("${var_name} env var was not set."))
 

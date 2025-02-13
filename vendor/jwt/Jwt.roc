@@ -11,7 +11,7 @@ Claims : {
     },
 }
 
-parse : Str, JwtSecret -> Result Jwt [InvalidJwt]
+parse : Str, JwtSecret -> Result(Jwt, [InvalidJwt])
 parse = |str, secret|
     crash "TODO"
 

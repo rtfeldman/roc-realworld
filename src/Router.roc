@@ -101,7 +101,7 @@ ResponseErr : [
     InternalErr(Str)
 ]
 
-to_resp : Result (List U8) ResponseErr -> Response
+to_resp : Result(List(U8), ResponseErr) -> Response
 to_resp = |result|
     match result {
         Ok(json_bytes) ->

@@ -3,7 +3,7 @@ module [Logger, new, do_nothing, log!, debug!, info!, warn!, error!]
 
 Logger := { write_raw!: LogLevel, Str => {} }
 
-do_nothing : -> Logger
+do_nothing : () -> Logger
 do_nothing = ||
     Logger.{ write_raw!: |_, _| {} }
 

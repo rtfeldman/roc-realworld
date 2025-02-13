@@ -16,22 +16,24 @@ import pg.Pg.Cmd
 import pg.Pg
 
 PreparedArticles : {
-    list_articles: Cmd (List ListArticlesRow),
-    get_article_by_slug: Cmd GetArticleBySlugRow,
+    list_articles: Cmd(List(ListArticlesRow)),
+    get_article_by_slug: Cmd(GetArticleBySlugRow),
 }
 
+# Note from JanCVanB: I'm preserving old indentation here. (compare to 39 lines below)
 prepare_all! :
     Client
-    => Result
-        PreparedArticles
+    => Result(
+        PreparedArticles,
         [
-            PgExpectErr _,
-            PgErr Pg.Error,
-            PgProtoErr _,
-            TcpReadErr _,
+            PgExpectErr(_),
+            PgErr(Pg.Error),
+            PgProtoErr(_),
+            TcpReadErr(_),
             TcpUnexpectedEOF,
-            TcpWriteErr _,
+            TcpWriteErr(_),
         ]
+    )
 prepare_all! = |client|
     {
         list_articles: prepare_list_articles!(client)?,
@@ -48,7 +50,7 @@ ListArticlesRow : {
     updated_at: Str,
     favorited: Bool,
     favorites_count: U64,
-    tag_list: List Str,
+    tag_list: List(Str),
     author: {
         username: Str,
         bio: Str,
@@ -57,40 +59,41 @@ ListArticlesRow : {
     }
 }
 
-prepare_list_articles! :
-    Client
-    => Result
-        (Cmd (List ListArticlesRow))
-        [
-            PgExpectErr _,
-            PgErr Pg.Error,
-            PgProtoErr _,
-            TcpReadErr _,
-            TcpUnexpectedEOF,
-            TcpWriteErr _,
-        ]
+# Note from JanCVanB: I'm trying new indentation here. (compare to 39 lines above)
+prepare_list_articles! : Client => Result(
+    Cmd(List(ListArticlesRow)),
+    [
+        PgExpectErr(_),
+        PgErr(Pg.Error),
+        PgProtoErr(_),
+        TcpReadErr(_),
+        TcpUnexpectedEOF,
+        TcpWriteErr(_),
+    ]
+)
 prepare_list_articles! = |client|
     import "../src/sql/Articles/list_articles.sql" as sql : Str
     client.prepare("list_articles", sql)
 
 list_articles! :
     Pg.Client,
-    Pg.Cmd (List ListArticlesRow),
+    Pg.Cmd(List(ListArticlesRow)),
     Str,
     Str,
     Str,
     U64,
     U64
-    => Result
-        (List ListArticlesRow)
+    => Result(
+        List(ListArticlesRow),
         [
-            PgExpectErr _,
-            PgErr Pg.Error,
-            PgProtoErr _,
-            TcpReadErr _,
+            PgExpectErr(_),
+            PgErr(Pg.Error),
+            PgProtoErr(_),
+            TcpReadErr(_),
             TcpUnexpectedEOF,
-            TcpWriteErr _,
+            TcpWriteErr(_),
         ]
+    )
 list_articles! = |client, cmd, p0, p1, p2, p3, p4|
     client.command!(cmd.bind([Cmd.str p0, Cmd.str p1, Cmd.str p2, Cmd.u64 p3, Cmd.u64 p4]))
 
@@ -100,7 +103,7 @@ GetArticleBySlugRow : {
     slug : Str,
     title : Str,
     description : Str,
-    tag_list: List Str,
+    tag_list: List(Str),
     created_at : Str,
     updated_at : Str,
     favorited : Bool,
@@ -116,35 +119,37 @@ GetArticleBySlugRow : {
 
 prepare_get_article_by_slug! :
     Pg.Client,
-    Pg.Cmd (GetArticleBySlugRow),
+    Pg.Cmd(GetArticleBySlugRow),
     Str,
-    => Result
-        GetArticleBySlugRow
+    => Result(
+        GetArticleBySlugRow,
         [
-            PgExpectErr _,
-            PgErr Pg.Error,
-            PgProtoErr _,
-            TcpReadErr _,
+            PgExpectErr(_),
+            PgErr(Pg.Error),
+            PgProtoErr(_),
+            TcpReadErr(_),
             TcpUnexpectedEOF,
-            TcpWriteErr _,
+            TcpWriteErr(_),
         ]
+    )
 prepare_get_article_by_slug! = |client, cmd, p0|
     import "../src/sql/Articles/get_article_by_slug.sql" as sql : Str
     client.prepare("get_article_by_slug", sql)
 
 get_article_by_slug! :
     Pg.Client,
-    Pg.Cmd (GetArticleBySlugRow),
+    Pg.Cmd(GetArticleBySlugRow),
     Str,
-    => Result
-        GetArticleBySlugRow
+    => Result(
+        GetArticleBySlugRow,
         [
-            PgExpectErr _,
-            PgErr Pg.Error,
-            PgProtoErr _,
-            TcpReadErr _,
+            PgExpectErr(_),
+            PgErr(Pg.Error),
+            PgProtoErr(_),
+            TcpReadErr(_),
             TcpUnexpectedEOF,
-            TcpWriteErr _,
+            TcpWriteErr(_),
         ]
+    )
 get_article_by_slug! = |client, cmd, p0|
     client.command!(cmd.bind([Cmd.str p0]))

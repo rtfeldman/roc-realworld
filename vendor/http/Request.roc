@@ -4,16 +4,16 @@ module [Request, Method, new, header]
 Request := {
     method: Str,
     path: Str,
-    headers: List (Str, Str),
+    headers: List((Str, Str)),
 }
 
 ## All the HTTP methods we support.
 Method : [GET, POST, PUT, DELETE, OPTIONS]
 
-new : { method : Str, path : Str, headers : List (Str, Str) } -> Request
+new : { method : Str, path : Str, headers : List((Str, Str)) } -> Request
 new = |{ method, path, headers }| Request.{ method, path, headers }
 
-header : Request, Str -> Result Str [NotFound]
+header : Request, Str -> Result(Str, [NotFound])
 header = |req, _header_name| {
     for (name, value) in req.headers.iter() {
         if name == header_name {
@@ -27,7 +27,7 @@ header = |req, _header_name| {
 path : Request -> Str
 path = |req| req.path
 
-method : Request -> Result Method [UnrecognizedMethod(Str)]
+method : Request -> Result(Method, [UnrecognizedMethod(Str)])
 method = |req|
     match req.method {
         "GET" -> Ok(GET)
@@ -38,7 +38,7 @@ method = |req|
         _ -> Err(UnrecognizedMethod(req.method))
     }
 
-params : Request -> List (Str, Str)
+params : Request -> List((Str, Str))
 params = |req|
     req
     .path()
@@ -53,7 +53,7 @@ params = |req|
         }
     )
 
-params : Request -> List (Str, Str)
+params : Request -> List((Str, Str))
 params = |req|
     req
     .path()

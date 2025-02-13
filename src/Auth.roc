@@ -8,7 +8,7 @@ import UserId exposing [UserId]
 import Db
 
 ## Given a user's credentials, log them in and return their UserId.
-login! : Db, { email : Str, password : Str } => Result UserId [Unauthorized, InternalErr Str]
+login! : Db, { email : Str, password : Str } => Result(UserId, [Unauthorized, InternalErr(Str)])
 login! = |db, { email, password }|
     match users.find_by_email!(email) {
         Ok(user) =>
@@ -23,7 +23,7 @@ login! = |db, { email, password }|
     }
 
 ## Given a Request and the current time, verify that the token is valid and return its UserId.
-authenticate : Request, Instant -> Result UserId [Unauthorized, BadArg]
+authenticate : Request, Instant -> Result(UserId, [Unauthorized, BadArg])
 authenticate = |req, now|
     match parse_user_id(req, jwt_secret, now) {
         Ok(user_id) -> Ok(user_id)
@@ -33,7 +33,7 @@ authenticate = |req, now|
 
 ## Given a Request and the current time, verify that either there is a valid token (in which case
 ## return `SignedIn(UserId)`, or that there is no token (in which case return `SignedOut`).
-auth_optional : Request, Instant -> Result [SignedIn UserId, SignedOut] [Unauthorized, BadArg]
+auth_optional : Request, Instant -> Result([SignedIn(UserId), SignedOut], [Unauthorized, BadArg])
 auth_optional = |req, now|
     match parse_user_id(req, jwt_secret, now) {
         Ok(user_id) -> Ok(SignedIn(user_id))
@@ -47,7 +47,7 @@ parse_user_id :
     Request,
     JwtSecret,
     Instant,
-    -> Result UserId [MissingTokenHeader, InvalidJwt Jwt.ParseErr, TokenExpired]
+    -> Result(UserId, [MissingTokenHeader, InvalidJwt(Jwt.ParseErr), TokenExpired])
 parse_user_id = |req, jwt_secret, now| {
     token_str = Request.header("Token") ? |NotFound| MissingTokenHeader
     Jwt.{ claims } = Jwt.parse(token_str, jwt_secret) ? InvalidJwt
