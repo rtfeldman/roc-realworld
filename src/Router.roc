@@ -96,10 +96,11 @@ handle_req! = |{ jwt_secret, log, db, now! }, req| {
         # (and pass the method along to it instead of matching on only POST like this).
         (POST, "/users${users_path}") {
             from_json!(|email_and_pw|
-                when users_path is
-                    "/login" -> db.users.login!(email_and_pw)
-                    "" -> db.users.register!(email_and_pw)
-                    _ -> return Response.err(404)
+                match users_path {
+                    "/login" { db.users.login!(email_and_pw) },
+                    "" { db.users.register!(email_and_pw) },
+                    _ { return Response.err(404) },
+                }
             )
         },
         (OPTIONS, path) {

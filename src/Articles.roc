@@ -38,7 +38,7 @@ insert! = |{ client, prepared }, author_id, new_article| {
 get_by_slug! : Articles, Str => Result (List U8) [NotFound, InternalErr Str]
 get_by_slug! = |{ client, prepared }, slug|
     match ArticlesSql.get_article_by_slug!(client, prepared.get_article_by_slug, slug) {
-        Ok([row]) ->
+        Ok([row]) {
             {
                 slug: row.slug,
                 title: row.title,
@@ -58,10 +58,10 @@ get_by_slug! = |{ client, prepared }, slug|
             })
             .encode(Json.utf8.transform(CamelCase))
             .(Ok)
-
-        Ok([]) -> Err(NotFound)
-        Ok([..]) -> Err(InternalErr("Multiple articles found for the slug ${slug.inspect()}"))
-        Err(db_err) -> Err(InternalErr(db_err.inspect()))
+        },
+        Ok([]) { Err(NotFound) },
+        Ok([..]) { Err(InternalErr("Multiple articles found for the slug ${slug.inspect()}")) },
+        Err(db_err) { Err(InternalErr(db_err.inspect())) },
     }
 
 list! :
@@ -114,8 +114,7 @@ list! = |{ client, prepared }, opt_user_id, query_params| {
             .encode(Json.utf8.transform(CamelCase))
             .(Ok)
         },
-        Err(db_err) {
-            Err(InternalErr(db_err.inspect()))},
+        Err(db_err) { Err(InternalErr(db_err.inspect())) },
     }
 }
 
@@ -162,9 +161,7 @@ feed! = |{ client, prepared }, user_id, query_params| {
             .encode(Json.utf8.transform(CamelCase))
             .(Ok)
         },
-        Err(db_err) {
-            Err(InternalErr(db_err.inspect()))
-        },
+        Err(db_err) { Err(InternalErr(db_err.inspect())) },
     }
 }
 
