@@ -90,7 +90,7 @@ list! = |{ client, prepared }, opt_user_id, query_params| {
             config.offset,
         )
     {
-        Ok(rows) ->
+        Ok(rows) {
             # JSON format: https://realworld-docs.netlify.app/specifications/backend/api-response-format/#multiple-articles
             {
                 articles_count: rows.len(),
@@ -113,7 +113,9 @@ list! = |{ client, prepared }, opt_user_id, query_params| {
             }
             .encode(Json.utf8.transform(CamelCase))
             .(Ok)
-        Err(db_err) -> Err(InternalErr(db_err.inspect()))
+        },
+        Err(db_err) {
+            Err(InternalErr(db_err.inspect()))},
     }
 }
 
@@ -128,9 +130,9 @@ update! = |{ client, prepared }, user_id, slug, update_article| {
     )
 
     match client.query!(cmd) {
-        Ok([row]) -> Article.from_row(row).(Ok)
-        Ok([]) -> Err(NotFound)
-        Err(db_err) -> Err(InternalErr(db_err.inspect()))
+        Ok([row]) { Article.from_row(row).(Ok) },
+        Ok([]) { Err(NotFound) },
+        Err(db_err) { Err(InternalErr(db_err.inspect())) },
     }
 }
 
@@ -139,9 +141,9 @@ delete! = |{ client, prepared }, user_id, slug| {
     cmd = prepared.delete_article.bind(slug, u64(user_id))
 
     match client.execute!(cmd) {
-        Ok(0) -> Err(NotFound)
-        Ok(_) -> Ok({})
-        Err(db_err) -> Err(InternalErr(db_err.inspect()))
+        Ok(0) { Err(NotFound) },
+        Ok(_) { Ok({}) },
+        Err(db_err) { Err(InternalErr(db_err.inspect())) },
     }
 }
 
@@ -152,15 +154,17 @@ feed! = |{ client, prepared }, user_id, query_params| {
     cmd = prepared.get_feed.bind(u64(user_id), limit, offset)
 
     match client.query!(cmd) {
-        Ok(rows) ->
+        Ok(rows) {
             {
                 articles_count: rows.len(),
                 articles: rows.map(Article.from_row),
             }
             .encode(Json.utf8.transform(CamelCase))
             .(Ok)
-        Err(db_err) ->
+        },
+        Err(db_err) {
             Err(InternalErr(db_err.inspect()))
+        },
     }
 }
 
@@ -176,9 +180,9 @@ favorite! = |{ client, prepared }, user_id, slug| {
     cmd = prepared.favorite_article.bind(u64(user_id), slug)
 
     match client.query!(cmd) {
-        Ok([row]) -> Article.from_row(row).(Ok)
-        Ok([]) -> Err(NotFound)
-        Err(db_err) -> Err(InternalErr(db_err.inspect()))
+        Ok([row]) { Article.from_row(row).(Ok) },
+        Ok([]) { Err(NotFound) },
+        Err(db_err) { Err(InternalErr(db_err.inspect())) },
     }
 }
 
@@ -194,11 +198,8 @@ unfavorite! = |{ client, prepared }, user_id, slug| {
       # JOIN users u ON a.author_id = u.id
       # WHERE a.slug = $2
     match client.query!(cmd) {
-        Ok([row]) ->
-            Article.fromRow(row).(Ok)
-        Ok([]) ->
-            Err(NotFound)
-        Err(db_err) ->
-            Err(InternalErr(db_err.inspect()))
+        Ok([row]) { Article.fromRow(row).(Ok) },
+        Ok([]) { Err(NotFound) },
+        Err(db_err) { Err(InternalErr(db_err.inspect())) },
     }
 }

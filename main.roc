@@ -28,10 +28,13 @@ init! = |_args| {
 
     min_level =
         match Env.var!("LOG_LEVEL") {
-            Ok(level_str) ->
+            Ok(level_str) {
                 LogLevel.from_str(level_str) ? |UnsupportedLevel|
                     InitFailed("Invalid LOG_LEVEL env var: ${level_str}")
-            Err(VarNotFound) -> default_log_level
+            },
+            Err(VarNotFound){
+                default_log_level
+            },
         }
 
     log =
@@ -45,9 +48,10 @@ init! = |_args| {
             port_str = required_env_var!("DB_PORT")?
             port_str.to_u16() ? |InvalidNumStr| InitFailed("Invalid DB_PORT: ${port_str}")?,
         auth:
-            when Env.var("DB_PASSWORD") is
-                Ok(password) -> Password password
-                Err(VarNotFound) -> None,
+            match Env.var("DB_PASSWORD") {
+                Ok(password) { Password password },
+                Err(VarNotFound) { None },
+            }
         tcp: # TODO give function(s) to do the TCP stuff it needs to do.
         on_err!: |err| log.error!("db error: ${err.inspect()}"),
     }
