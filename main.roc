@@ -23,18 +23,22 @@ default_log_level : LogLevel
 default_log_level = LogLevel.Warn
 
 init! : List Arg => Result (Request => Response) [InitFailed Str]
-init! = |_args|
+init! = |_args| {
     jwt_secret = required_env_var!("JWT_SECRET")?
 
     min_level =
-        when Env.var!("LOG_LEVEL") is
-            Ok(level_str) ->
+        match Env.var!("LOG_LEVEL") {
+            |Ok(level_str)| {
                 LogLevel.from_str(level_str) ? |UnsupportedLevel|
                     InitFailed("Invalid LOG_LEVEL env var: ${level_str}")
-            Err(VarNotFound) -> default_log_level
+            }
+            |Err(VarNotFound)| {
+                default_log_level
+            }
+        }
 
     log =
-        Logger.new(|level, msg| if level >= min_level then write_log!(level, msg))
+        Logger.new(|level, msg| if level >= min_level { write_log!(level, msg) })
 
     db_config = {
         host: required_env_var!("DB_HOST")?,
@@ -44,9 +48,10 @@ init! = |_args|
             port_str = required_env_var!("DB_PORT")?
             port_str.to_u16() ? |InvalidNumStr| InitFailed("Invalid DB_PORT: ${port_str}")?,
         auth:
-            when Env.var("DB_PASSWORD") is
-                Ok(password) -> Password password
-                Err(VarNotFound) -> None,
+            match Env.var("DB_PASSWORD") {
+                |Ok(password)| Password password
+                |Err(VarNotFound)| None
+            }
         tcp: # TODO give function(s) to do the TCP stuff it needs to do.
         on_err!: |err| log.error!("db error: ${err.inspect()}"),
     }
@@ -58,6 +63,7 @@ init! = |_args|
     router = Router.{ jwt_secret, db, log, now!: ws.Clock.now! }
 
     Ok(|req| Router.handle_req!(router, req))
+}
 
 required_env_var! : Str => Result Str [InitFailed Str]
 required_env_var! = |var_name|

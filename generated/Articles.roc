@@ -33,10 +33,9 @@ prepare_all! :
             TcpWriteErr _,
         ]
 prepare_all! = |client|
-    {
-        list_articles: prepare_list_articles!(client)?,
-        get_article_by_slug: prepare_get_article_by_slug!(client)?,
-    }
+    list_articles = prepare_list_articles!(client)?
+    get_article_by_slug = prepare_get_article_by_slug!(client)?
+    { list_articles, get_article_by_slug }
 
 # list_articles.sql
 

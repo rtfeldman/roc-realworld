@@ -45,3 +45,5 @@ own READMEs.
 - Allow using un-imported, package-qualified module names in expressions, e.g. `foo.Bar.baz` - not planned
 - `expect ModuleName` - not proposed, just trying it out
 - `test` modules - not proposed, just trying it out
+- Using `match` instead of `when ... is`
+- Using `|pattern| expr` inside `match` statements
