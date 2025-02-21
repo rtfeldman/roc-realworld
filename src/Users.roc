@@ -18,9 +18,9 @@ find_by_email! = |email|
 get_profile! : Username => Result User [NotFound, InternalErr Str]
 get_profile! = |username|
     match find_by_username!(username) {
-        Ok(user) { Ok(user) },
-        Err(NotFound) { Err(NotFound) },
-        Err(db_err) {
+        |Ok(user)| Ok(user)
+        |Err(NotFound)| Err(NotFound)
+        |Err(db_err)| {
             Err(InternalErr("DB error when trying to get the profile for user ${username.inspect()}. Error was: $(err.inspect())"))
-        },
+        }
     }

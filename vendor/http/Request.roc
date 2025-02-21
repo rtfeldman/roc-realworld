@@ -30,12 +30,12 @@ path = |req| req.path
 method : Request -> Result Method [UnrecognizedMethod(Str)]
 method = |req|
     match req.method {
-        "GET" { Ok(GET) },
-        "POST" { Ok(POST) },
-        "PUT" { Ok(PUT) },
-        "DELETE" { Ok(DELETE) },
-        "OPTIONS" { Ok(OPTIONS) },
-        _ { Err(UnrecognizedMethod(req.method)) },
+        |"GET"| Ok(GET)
+        |"POST"| Ok(POST)
+        |"PUT"| Ok(PUT)
+        |"DELETE"| Ok(DELETE)
+        |"OPTIONS"| Ok(OPTIONS)
+        |_| Err(UnrecognizedMethod(req.method))
     }
 
 params : Request -> List (Str, Str)
@@ -48,8 +48,8 @@ params = |req|
     .split_on("&")
     .map(|param|
         match param.split_first("=") {
-            Ok({ before, after }) { (before, after) },
-            Err(NotFound) { (param, "") },
+            |Ok({ before, after })| (before, after)
+            |Err(NotFound)| (param, "")
         }
     )
 
