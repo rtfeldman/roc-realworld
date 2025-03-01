@@ -16,8 +16,9 @@ Articles := {
 }
 
 prepare! : Client => Result(Articles, DbErr)
-prepare! = |client|
+prepare! = |client| {
     Ok({ client, prepared: ArticlesSql.prepare_all!(client)? })
+}
 
 NewArticle : {
     title : Str,
@@ -36,7 +37,7 @@ insert! = |{ client, prepared }, author_id, new_article| {
 }
 
 get_by_slug! : Articles, Str => Result(List(U8), [NotFound, InternalErr(Str)])
-get_by_slug! = |{ client, prepared }, slug|
+get_by_slug! = |{ client, prepared }, slug| {
     match ArticlesSql.get_article_by_slug!(client, prepared.get_article_by_slug, slug) {
         Ok([row]) ->
             {
@@ -63,6 +64,7 @@ get_by_slug! = |{ client, prepared }, slug|
         Ok([..]) -> Err(InternalErr("Multiple articles found for the slug ${slug.inspect()}"))
         Err(db_err) -> Err(InternalErr(db_err.inspect()))
     }
+}
 
 list! :
     Articles,

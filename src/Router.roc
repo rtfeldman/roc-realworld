@@ -30,11 +30,12 @@ handle_req! = |{ jwt_secret, log, db, now! }, req| {
     auth! = |handle!| to_resp(Auth.authenticate(req, now!()).and_then!(handle!))
     auth_optional! = |handle!| to_resp(Auth.auth_optional(req, now!()).and_then!(handle!))
     from_json! = |handle!| to_resp(req.body().decode(Json.utf8).and_then!(handle!)))
-    from_json_auth! = |handle!|
+    from_json_auth! = |handle!| {
         to_resp(
             auth(req, now!())
             .and_then!(|user_id| handle!(user_id, req.body().decode(Json.utf8)?))
         )
+}
 
     match (method, path) {
         (GET, "/articles/${slug}") ->
@@ -78,12 +79,12 @@ handle_req! = |{ jwt_secret, log, db, now! }, req| {
         # break out a helper function here, to handle everything under the /users path
         # (and pass the method along to it instead of matching on only POST like this).
         (POST, "/users${users_path}") ->
-            from_json!(|email_and_pw|
+            from_json!(|email_and_pw| {
                 when users_path is
                     "/login" -> db.users.login!(email_and_pw)
                     "" -> db.users.register!(email_and_pw)
                     _ -> return Response.err(404)
-            )
+            })
         (OPTIONS, path) ->
             handle_cors(req.headers(), path)
         _ -> Response.err(404)
@@ -102,7 +103,7 @@ ResponseErr : [
 ]
 
 to_resp : Result(List(U8), ResponseErr) -> Response
-to_resp = |result|
+to_resp = |result| {
     match result {
         Ok(json_bytes) ->
             Response.ok()
@@ -117,3 +118,4 @@ to_resp = |result|
             .body(str)
             .header("Content-Type", "text/plain; charset=utf-8")
     }
+}

@@ -12,8 +12,9 @@ Db : {
 }
 
 prepare! : DbClient => Result(Db, [DbConnectErr, DbPrepareErr])
-prepare! = |client|
+prepare! = |client| {
     {
         articles: Articles.prepare!(client)?,
         users: Users.prepare!(client)?,
     }
+}

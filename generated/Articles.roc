@@ -34,11 +34,10 @@ prepare_all! :
             TcpWriteErr(_),
         ]
     )
-prepare_all! = |client|
-    {
-        list_articles: prepare_list_articles!(client)?,
-        get_article_by_slug: prepare_get_article_by_slug!(client)?,
-    }
+prepare_all! = |client| {
+    list_articles: prepare_list_articles!(client)?,
+    get_article_by_slug: prepare_get_article_by_slug!(client)?,
+}
 
 # list_articles.sql
 
@@ -71,9 +70,10 @@ prepare_list_articles! : Client => Result(
         TcpWriteErr(_),
     ]
 )
-prepare_list_articles! = |client|
+prepare_list_articles! = |client| {
     import "../src/sql/Articles/list_articles.sql" as sql : Str
     client.prepare("list_articles", sql)
+}
 
 list_articles! :
     Pg.Client,
@@ -94,8 +94,9 @@ list_articles! :
             TcpWriteErr(_),
         ]
     )
-list_articles! = |client, cmd, p0, p1, p2, p3, p4|
+list_articles! = |client, cmd, p0, p1, p2, p3, p4| {
     client.command!(cmd.bind([Cmd.str p0, Cmd.str p1, Cmd.str p2, Cmd.u64 p3, Cmd.u64 p4]))
+}
 
 # get_article_by_slug.sql
 
@@ -132,9 +133,10 @@ prepare_get_article_by_slug! :
             TcpWriteErr(_),
         ]
     )
-prepare_get_article_by_slug! = |client, cmd, p0|
+prepare_get_article_by_slug! = |client, cmd, p0| {
     import "../src/sql/Articles/get_article_by_slug.sql" as sql : Str
     client.prepare("get_article_by_slug", sql)
+}
 
 get_article_by_slug! :
     Pg.Client,
@@ -151,5 +153,6 @@ get_article_by_slug! :
             TcpWriteErr(_),
         ]
     )
-get_article_by_slug! = |client, cmd, p0|
+get_article_by_slug! = |client, cmd, p0| {
     client.command!(cmd.bind([Cmd.str p0]))
+}

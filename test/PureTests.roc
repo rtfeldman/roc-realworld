@@ -8,17 +8,21 @@ jwt_secret = "abcdefg"
 log = Logger.do_nothing()
 initial_time = Instant.from_ns_since_utc_epoch(123456789)
 
-get_now = |get!, set!| ||
-    state = get!()
-    set!({ state & now: state.now + 1ms })
-    state.now
+get_now = |get!, set!| {
+    || {
+        state = get!()
+        set!({ state & now: state.now + 1ms })
+        state.now
+    }
+}
 
-get_db = |get!, set!, on_query!|
+get_db = |get!, set!, on_query!| {
     # Here, we would need roc-pg to expose a function that returns a simluated Client
     # which uses the provided `get!` and `set!` to simulate database operations.
     crash "TODO return simulated db"
+}
 
-expect |get!, set!|
+expect |get!, set!| {
     db = get_db(get!, set!, |_|)
     now! = get_now(get!, set!)
     set!({ now: initial_time, db })
@@ -32,9 +36,10 @@ expect |get!, set!|
     })
 
     Route.handle_req!(req) == Err(NotFound)
+}
 
 ## Creating a new account should only persist encrypted password, not plaintext.
-expect |get!, set!|
+expect |get!, set!| {
     user = {
         username: "example-username",
         email: "example-email",
@@ -50,9 +55,10 @@ expect |get!, set!|
     # To expect multiple queries, use get! and set! to have each subsequent call to on_query!
     # pop a different function out of a List which runs on the current query. (If the list
     # is empty, fail with an error saying an unexpected query was performed.)
-    on_query! = |query|
+    on_query! = |query| {
         expect Ok(Insert({ table: "authors", ..user })) == query.decode())
         Ok(Pg.empty_query_result())
+    }
 
     db = get_db(get!, set!, on_query!)
     now! = get_now(get!, set!)
@@ -79,3 +85,4 @@ expect |get!, set!|
     }
 
     router.handle_req!(req).and_then(.body().decode(Json.utf8)) == Ok(expected_json)
+}

@@ -28,7 +28,7 @@ path : Request -> Str
 path = |req| req.path
 
 method : Request -> Result(Method, [UnrecognizedMethod(Str)])
-method = |req|
+method = |req| {
     match req.method {
         "GET" -> Ok(GET)
         "POST" -> Ok(POST)
@@ -37,9 +37,10 @@ method = |req|
         "OPTIONS" -> Ok(OPTIONS)
         _ -> Err(UnrecognizedMethod(req.method))
     }
+}
 
 params : Request -> List((Str, Str))
-params = |req|
+params = |req| {
     req
     .path()
     .split_first("?")
@@ -52,9 +53,10 @@ params = |req|
             Err(NotFound) -> (param, "")
         }
     )
+}
 
 params : Request -> List((Str, Str))
-params = |req|
+params = |req| {
     req
     .path()
     .split_first("?")
@@ -62,3 +64,4 @@ params = |req|
     .with_default("")
     .split_on("&")
     .map(|param| param.split_first("=") ?? (param, ""))
+}
