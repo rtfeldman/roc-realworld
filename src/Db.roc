@@ -11,9 +11,10 @@ Db : {
     users: Users.PreparedStatements,
 }
 
-prepare! : DbClient => Result Db [DbConnectErr, DbPrepareErr]
-prepare! = |client|
+prepare! : DbClient => Result(Db, [DbConnectErr, DbPrepareErr])
+prepare! = |client| {
     {
         articles: Articles.prepare!(client)?,
         users: Users.prepare!(client)?,
     }
+}

@@ -11,14 +11,17 @@ Claims : {
     },
 }
 
-parse : Str, JwtSecret -> Result Jwt [InvalidJwt]
-parse = |str, secret|
+parse : Str, JwtSecret -> Result(Jwt, [InvalidJwt])
+parse = |str, secret| {
     crash "TODO"
+}
 
 hs256_with_claims : Claims -> Jwt
-hs256_with_claims = |claims|
+hs256_with_claims = |claims| {
     crash "TODO"
+}
 
 signed_str : Jwt, JwtSecret -> Str
-signed_str = |jwt, secret|
+signed_str = |jwt, secret| {
     crash "TODO"
+}
